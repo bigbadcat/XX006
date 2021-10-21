@@ -1,6 +1,8 @@
+.vsconfig
 .vs/
 Apk/
 obj/
+Logs/
 Assets/LuaPrecompile/
 Assets/LuaPrecompile.meta
 Assets/StreamingAssets/
@@ -20,3 +22,4 @@ XX006.Unity.Editor.Plugins.csproj
 XX006.Unity.Plugins.csproj
 XX006.Unity.sln
 XX006.Unity.userprefs
+Packages/packages-lock.json

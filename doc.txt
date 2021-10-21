@@ -1,0 +1,31 @@
+https://github.com/bigbadcat/XX006.git
+
+
+----动态光照版----
+功能点
+1.地形
+  -分块
+  -GPU Driven Render Pipeline三角形剔除
+  -多表面纹理
+  -纹理凹凸感
+  -LOD
+2.静态物件
+  -纹理合并
+  -Mesh合并
+  -Compute Shader进行视锥体剔除
+  -Compute Shader进行Hi-Z剔除
+3.动态物件
+  -GPU顶点动画
+4.水面反射
+
+
+
+
+
+
+
+----静态光照----
+1.阴影烘培
+  -分块烘培阴影连续
+  -动态对象阴影
+2.反射预烘培
