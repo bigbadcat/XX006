@@ -1,0 +1,84 @@
+// Each #kernel tells which function to compile; you can have many kernels
+#pragma kernel CSMain
+
+struct instancing_data
+{
+    float4x4 trs;
+    float rate;
+};
+
+float4 _CameraPlanes[6];
+float4x4 _CameraVPMatrix;         //camera vp matrix.
+float4 _BoundPoints[8];
+Texture2D _HizDepthTexture;
+uint _HizDepthTextureSize;
+
+float _Wind;
+float _WindGap;
+float4 _WindDir;        //w=sqrt(AA+BB+CC)
+
+uint _InstanceCount;
+StructuredBuffer<instancing_data> _InstancingBuffer;
+AppendStructuredBuffer<instancing_data> _CullResult;
+
+bool IsInClipSpace(float4 clip_pos)
+{
+    return clip_pos.x > -clip_pos.w && clip_pos.x < clip_pos.w
+    && clip_pos.y > -clip_pos.w && clip_pos.y < clip_pos.w
+    && clip_pos.z > 0 && clip_pos.z < clip_pos.w;
+}
+
+[numthreads(128, 1, 1)]
+void CSMain (uint3 id : SV_DispatchThreadID)
+{
+    if(id.x >= _InstanceCount)
+    {
+        return;
+    }
+
+    //view frushtum culling
+    instancing_data data = _InstancingBuffer[id.x];
+    float min_x = 1, min_y = 1, min_z = 1, max_x = -1, max_y = -1, max_z = -1;    //AABB for NDC
+    bool in_clip = false;
+    float4x4 mvpMatrix = mul(_CameraVPMatrix, data.trs);
+    for (int i = 0; i < 8; i++)
+    {
+        float4 clip_pos = mul(mvpMatrix, _BoundPoints[i]);
+        in_clip = in_clip || IsInClipSpace(clip_pos);
+
+        float3 ndc = clip_pos.xyz / clip_pos.w;
+        min_x = min(min_x, ndc.x);
+        min_y = min(min_y, ndc.y);
+        min_z = min(min_z, ndc.z);
+        max_x = max(max_x, ndc.x);
+        max_y = max(max_y, ndc.y);
+        max_z = max(max_z, ndc.z);
+    }
+    if (!in_clip)
+    {
+        return;
+    }
+
+    //ncd[-1,1] to uv[0,1]
+    float2 uv_center = float2(min_x + max_x, min_y + max_y) / 2 * 0.5f + 0.5f;
+    float depth_ins = max_z;
+
+    //select mipmap level    
+    uint mipmap_level = (uint)clamp(log2(max(max_x - min_x, max_y - min_y) * _HizDepthTextureSize) - 1, 0, log2(_HizDepthTextureSize) - 3);
+    uint size = _HizDepthTextureSize / (1 << mipmap_level);
+
+    //compare depth value culling
+    uint2 pixel_center = uint2(clamp(uv_center.x * size, 0, size - 1), clamp(uv_center.y * size, 0, size - 1));
+    float depth_tex = _HizDepthTexture.mips[mipmap_level][pixel_center].r;
+    if (depth_ins < depth_tex)
+    {
+        return;
+    }
+
+    //compute wind rate
+    float3 pos = data.trs._14_24_34;        //_14_24_34 = position
+    float dis = (pos.x * _WindDir.x + pos.y * _WindDir.y + pos.z * _WindDir.z) / _WindDir.w;
+    float rad = frac((dis + _Wind) / _WindGap) * 6.283185264;
+    data.rate = sin(rad)/2 + 0.5;
+    _CullResult.Append(data);
+}

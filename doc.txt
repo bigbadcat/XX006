@@ -29,3 +29,20 @@ https://github.com/bigbadcat/XX006.git
   -分块烘培阴影连续
   -动态对象阴影
 2.反射预烘培
+
+
+
+
+
+----参考资料----
+shader坐标空间变换
+https://blog.csdn.net/lengyoumo/article/details/104091416
+
+ComputeShader基础
+https://zhuanlan.zhihu.com/p/368307575
+
+ComputeShader做视锥剔除
+https://zhuanlan.zhihu.com/p/376801370
+
+Compute Shader实现Hi-z遮挡剔除
+https://zhuanlan.zhihu.com/p/396979267
