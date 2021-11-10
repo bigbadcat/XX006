@@ -6,6 +6,6 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/ResourcesEx/Develop/DevTest.unity
+    path: Assets/Examples/GrassCulling.unity
     guid: 1415701c3d21cae4b8623e4d6cd4ab97
   m_configObjects: {}
