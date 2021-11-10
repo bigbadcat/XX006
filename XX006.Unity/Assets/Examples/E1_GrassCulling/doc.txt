@@ -1,0 +1,12 @@
+----参考资料----
+shader坐标空间变换
+https://blog.csdn.net/lengyoumo/article/details/104091416
+
+ComputeShader基础
+https://zhuanlan.zhihu.com/p/368307575
+
+ComputeShader做视锥剔除
+https://zhuanlan.zhihu.com/p/376801370
+
+ComputeShader实现Hi-z遮挡剔除
+https://zhuanlan.zhihu.com/p/396979267

@@ -12,10 +12,13 @@ https://github.com/bigbadcat/XX006.git
 2.静态物件
   -纹理合并
   -Mesh合并
-  -Compute Shader进行视锥体剔除
-  -Compute Shader进行Hi-Z剔除
+  -Compute Shader进行视锥体剔除 ok
+  -Compute Shader进行Hi-Z剔除 ok
 3.动态物件
   -GPU顶点动画
+   -顶点着色器动画 ok
+   -预烘培顶点动画数据 ok(其它工程内)
+  -草与角色交互
 4.水面反射
 
 
@@ -33,16 +36,3 @@ https://github.com/bigbadcat/XX006.git
 
 
 
-
-----参考资料----
-shader坐标空间变换
-https://blog.csdn.net/lengyoumo/article/details/104091416
-
-ComputeShader基础
-https://zhuanlan.zhihu.com/p/368307575
-
-ComputeShader做视锥剔除
-https://zhuanlan.zhihu.com/p/376801370
-
-Compute Shader实现Hi-z遮挡剔除
-https://zhuanlan.zhihu.com/p/396979267
