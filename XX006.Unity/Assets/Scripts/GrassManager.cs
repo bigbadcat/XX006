@@ -136,8 +136,36 @@ namespace XX006
     public struct GrassData
     {
         public Matrix4x4 trs;
-        public float rate;
+        public Vector4 wind;
+        public Vector4 bend;
     }
+
+    /// <summary>
+    /// 草的级别。
+    /// </summary>
+    public enum GrassLevel
+    {
+        /// <summary>
+        /// 静态草。(不会与风飘动，不会产生阴影，不会与角色交互)
+        /// </summary>
+        Static = 0,
+
+        /// <summary>
+        /// 低草。(会与风飘动，不会产生阴影，不会与角色交互)
+        /// </summary>
+        Low = 1,
+
+        /// <summary>
+        /// 中草。(会与风飘动，会产生阴影，不会与角色交互)
+        /// </summary>
+        Middle = 2,
+
+        /// <summary>
+        /// 高中草。(会与风飘动，会产生阴影，会与角色交互)
+        /// </summary>
+        Height = 3,
+    }
+
 
     /// <summary>
     /// 草皮块。
@@ -214,6 +242,19 @@ namespace XX006
             }
         }
 
+        public static Texture WindNoise
+        {
+            get { return s_WindNoise; }
+            set
+            {
+                s_WindNoise = value;
+                if (s_WindNoise != null)
+                {
+                    s_PID_WindNoise = Shader.PropertyToID("_WindNoise");
+                }
+            }
+        }
+
         public static ComputeShader ViewFrustumCulling
         {
             get { return s_ViewFrustumCulling; }
@@ -236,6 +277,9 @@ namespace XX006
             }
         }
 
+        public static int s_RoleTargetCount = 0;
+        public static Transform[] s_RoleTargets = new Transform[8];
+        public static Vector4[] s_RolePositions = new Vector4[8];
         private static Material s_HizMipmapMat;
         private static ComputeShader s_ViewFrustumCulling;
         private static int s_PID_CameraDepthTexture = 0;
@@ -248,12 +292,14 @@ namespace XX006
         private static int s_PID_Wind = 0;
         private static int s_PID_WindGap = 0;
         private static int s_PID_WindDir = 0;
+        private static int s_PID_WindNoise = 0;
         private static int s_PID_InstanceCount = 0;        
 
         /// <summary>
         /// 带mipmap的深度图。
         /// </summary>
         private static RenderTexture s_HizDepthTexture = null;
+        private static Texture s_WindNoise = null;
 
         private static int s_HizDepthUpdateFrame = -1;
 
@@ -262,7 +308,8 @@ namespace XX006
             //m_Pos[m_Count] = pos;
             GrassData data;
             data.trs = trs;
-            data.rate = 0;
+            data.wind = Vector4.zero;
+            data.bend = Vector4.zero;
             //data.rate2 = 0;
             m_Datas.Add(data);
 
@@ -293,7 +340,7 @@ namespace XX006
             {
                 UpdateBuffers(mesh);
             }
-            if (m_CurCount > 0 && s_ViewFrustumCulling != null)
+            if (m_CurCount > 0 && s_ViewFrustumCulling != null && s_HizDepthTexture != null)
             {
                 //UpdateHizDepthTexture();
 
@@ -308,9 +355,18 @@ namespace XX006
                 //设置风的参数
                 float fm = Mathf.Sqrt(dir.x * dir.x + dir.y * dir.y + dir.z * dir.z);
                 Vector4 wdir = new Vector4(dir.x, dir.y, dir.z, fm);
+                //Vector3 rpos = s_RoleTarget == null ? Vector3.zero : s_RoleTarget.position;
                 ViewFrustumCulling.SetFloat(s_PID_Wind, wind);
                 ViewFrustumCulling.SetFloat(s_PID_WindGap, gap);
                 ViewFrustumCulling.SetVector(s_PID_WindDir, wdir);
+                ViewFrustumCulling.SetTexture(s_Kernel, s_PID_WindNoise, s_WindNoise);
+                for (int i=0; i< s_RoleTargetCount; ++i)
+                {
+                    Vector3 p = s_RoleTargets[i].position;
+                    s_RolePositions[i] = new Vector4(p.x, p.y, p.z, 1);
+                }
+                ViewFrustumCulling.SetInt("_RoleCount", s_RoleTargetCount);
+                ViewFrustumCulling.SetVectorArray("_RoleInfos", s_RolePositions);
 
                 //设置要准备绘制的实例参数
                 m_CullResult.SetCounterValue(0);
@@ -348,7 +404,7 @@ namespace XX006
             m_CullResult = null;
 
             m_CurCount = m_Datas.Count;
-            m_LocalToWorldMatrixBuffer = new ComputeBuffer(m_CurCount, sizeof(float) * (16 + 1));
+            m_LocalToWorldMatrixBuffer = new ComputeBuffer(m_CurCount, sizeof(float) * (16 + 8));
             m_LocalToWorldMatrixBuffer.SetData(m_Datas);
             m_CullResult = new ComputeBuffer(m_CurCount, sizeof(float) * (16 + 1), ComputeBufferType.Append);
 

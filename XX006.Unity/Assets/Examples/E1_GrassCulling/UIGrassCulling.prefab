@@ -321,7 +321,7 @@ GameObject:
   - component: {fileID: 1317779339602931776}
   - component: {fileID: 7125489782210089713}
   m_Layer: 5
-  m_Name: UIMain
+  m_Name: UIGrassCulling
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

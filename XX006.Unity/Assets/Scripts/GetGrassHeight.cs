@@ -17,13 +17,16 @@ public class GetGrassHeight : MonoBehaviour
     [Range(0.1f, 10)]
     public float GapZ = 1;
 
-    [Range(0, 10)]
-    public float WindGap = 1;
+    [Range(1, 64)]
+    public float WindGap = 32;
 
-    [Range(0, 10)]
-    public float WindSpeed = 1;
+    [Range(1, 16)]
+    public float WindSpeed = 8;
 
     public Vector3 WindDir = new Vector3(-2, -0.5f, 0);
+    public Texture WindNoise;
+
+    public Transform[] RoleTargets;
 
     public Terrain Ground;
 
@@ -43,6 +46,12 @@ public class GetGrassHeight : MonoBehaviour
     {
         GrassChunk.ViewFrustumCulling = ViewFrustumCulling;
         GrassChunk.HizMipmapMat = HizmipmapMat;
+        GrassChunk.WindNoise = WindNoise;
+        GrassChunk.s_RoleTargetCount = RoleTargets == null ? 0 : Mathf.Min(RoleTargets.Length, GrassChunk.s_RoleTargets.Length);
+        for (int i=0; i< GrassChunk.s_RoleTargetCount; ++i)
+        {
+            GrassChunk.s_RoleTargets[i] = RoleTargets[i];
+        }
         BuildGrass();
     }
 
@@ -66,7 +75,7 @@ public class GetGrassHeight : MonoBehaviour
                 float h = td.GetInterpolatedHeight(x / 100, z / 100);
                 Vector3 pos = new Vector3(x, h - 0.002f, z);     //草要往下种一点点距离
                 Quaternion q = Quaternion.Euler(0, Random.Range(-90, 90), 0);
-                m_GrassManager.AddGrass(0, pos, Matrix4x4.TRS(pos, q, new Vector3(1, 1, 1)));
+                m_GrassManager.AddGrass(0, pos, Matrix4x4.TRS(pos, q, new Vector3(0.25f, Random.Range(0.5f, 1.2f), 1)));
             }
         }
 
@@ -78,7 +87,7 @@ public class GetGrassHeight : MonoBehaviour
         if (GrassMesh != null && GrassMat != null)
         {
             m_Wind += Time.deltaTime * WindSpeed;
-            m_GrassManager.DrawGrass(m_Wind, WindGap, WindDir, GrassMesh, 0, GrassMat);
+            m_GrassManager.DrawGrass(m_Wind, WindGap, this.transform.forward, GrassMesh, 0, GrassMat);
         }
     }
 

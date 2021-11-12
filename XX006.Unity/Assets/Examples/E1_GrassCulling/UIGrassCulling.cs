@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using XX006;
 
-public class UIMain : MonoBehaviour
+public class UIGrassCulling : MonoBehaviour
 {
     public RawImage RawImg;
     public TMPro.TextMeshProUGUI TiTle;

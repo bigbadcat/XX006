@@ -1,7 +1,7 @@
 //
 //绘制草的shader，需要配合DrawMeshInstancedIndirect传入_InstancingBuffer一起才能正常使用
 //
-Shader "Unlit/Grass"
+Shader "Unlit/GrassMiddle"
 {
     Properties
     {
