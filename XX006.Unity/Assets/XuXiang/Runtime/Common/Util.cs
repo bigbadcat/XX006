@@ -158,5 +158,23 @@ namespace XuXiang
             long ticks = DateTime.Now.Ticks - StartTime.Ticks;
             return ticks / 10000;
         }
+
+        /// <summary>
+        /// 通过精度、纬度和半径算出球面坐标。
+        /// </summary>
+        /// <param name="longitude">精度。</param>
+        /// <param name="latitude">纬度。</param>
+        /// <param name="radius">半径。</param>
+        /// <returns>球面坐标。</returns>
+        public static Vector3 GetSpherePosition(float longitude, float latitude, float radius)
+        {
+            float lati = latitude * Mathf.Deg2Rad;
+            float y = radius * Mathf.Sin(lati);                 //Y坐标
+            float xz = radius * Mathf.Cos(lati);                //XZ平面的距离
+            float longi = longitude * Mathf.Deg2Rad;
+            float x = xz * Mathf.Cos(longi);                    //X坐标
+            float z = xz * Mathf.Sin(longi);                    //Z坐标
+            return new Vector3(x, y, z);
+        }
     }
 }

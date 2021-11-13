@@ -6,6 +6,6 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/Examples/E3_GrassInteraction/GrassInteraction.unity
-    guid: 1415701c3d21cae4b8623e4d6cd4ab97
+    path: Assets/Examples/E1_GrassCulling/GrassInteraction.unity
+    guid: 9717841d834bf8848aec8aadd3561e17
   m_configObjects: {}

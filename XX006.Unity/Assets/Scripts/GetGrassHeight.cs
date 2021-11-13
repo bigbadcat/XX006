@@ -30,8 +30,6 @@ public class GetGrassHeight : MonoBehaviour
 
     public Terrain Ground;
 
-    //public GameObject Grass;
-
     public Mesh GrassMesh;
     public Material GrassMat;
     public ComputeShader ViewFrustumCulling;
@@ -75,7 +73,7 @@ public class GetGrassHeight : MonoBehaviour
                 float h = td.GetInterpolatedHeight(x / 100, z / 100);
                 Vector3 pos = new Vector3(x, h - 0.002f, z);     //草要往下种一点点距离
                 Quaternion q = Quaternion.Euler(0, Random.Range(-90, 90), 0);
-                m_GrassManager.AddGrass(0, pos, Matrix4x4.TRS(pos, q, new Vector3(0.25f, Random.Range(0.5f, 1.2f), 1)));
+                m_GrassManager.AddGrass(0, pos, Matrix4x4.TRS(pos, q, new Vector3(0.5f, Random.Range(0.5f, 1.2f), 1)));
             }
         }
 

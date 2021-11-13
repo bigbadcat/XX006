@@ -3,6 +3,7 @@
 Apk/
 obj/
 Logs/
+UserSettings/
 Assets/LuaPrecompile/
 Assets/LuaPrecompile.meta
 Assets/StreamingAssets/

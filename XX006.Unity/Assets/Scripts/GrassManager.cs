@@ -185,7 +185,7 @@ namespace XX006
             int w = depth_tex.width;
             int mipmap_level = 0;
             RenderTexture last_rt = null;   //上一层的mipmap，即mipmapLevel-1对应的mipmap
-            while (w >= 4)
+            while (w >= 16)
             {
                 RenderTexture cur_rt = RenderTexture.GetTemporary(w, w, 0, RenderTextureFormat.RHalf);
                 cur_rt.filterMode = FilterMode.Point;
@@ -218,7 +218,7 @@ namespace XX006
             {
                 if (s_HizDepthTexture == null)
                 {
-                    int size = Mathf.Min(256, Mathf.NextPowerOfTwo(Mathf.Max(Screen.width, Screen.height)));
+                    int size = 256;     //256够了，太大性价比不高
                     s_HizDepthTexture = new RenderTexture(size, size, 0, RenderTextureFormat.RHalf);           //16的红色通道保持深度值
                     s_HizDepthTexture.autoGenerateMips = false;        //Mipmap手动生成
                     s_HizDepthTexture.useMipMap = true;
@@ -380,8 +380,12 @@ namespace XX006
                 material.EnableKeyword("SHADOWS_SCREEN");
                 material.EnableKeyword("SHADOWS_DEPTH");
 
+                Camera camera = null;
+#if !UNITY_EDITOR
+                camera = Camera.main;
+#endif
                 Bounds bounds = new Bounds((m_MinPos + m_MaxPos) / 2, m_MaxPos - m_MinPos);
-                Graphics.DrawMeshInstancedIndirect(mesh, 0, material, bounds, m_ArgsBuffer, 0, null, UnityEngine.Rendering.ShadowCastingMode.On, true);
+                Graphics.DrawMeshInstancedIndirect(mesh, 0, material, bounds, m_ArgsBuffer, 0, null, UnityEngine.Rendering.ShadowCastingMode.On, true, 0, camera);
             }
         }
 
