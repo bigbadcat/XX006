@@ -1025,13 +1025,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2044007988}
-  m_LocalRotation: {x: 0, y: 0.86602545, z: 0, w: 0.49999994}
+  m_LocalRotation: {x: 0, y: 0.38268343, z: 0, w: 0.92387956}
   m_LocalPosition: {x: 57, y: 40, z: 42}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 5
-  m_LocalEulerAnglesHint: {x: 0, y: 120, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 45, z: 0}
 --- !u!114 &2044007990
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1046,19 +1046,19 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   AreaX: 100
   AreaY: 100
-  GapX: 0.2
-  GapZ: 0.2
+  GapX: 0.4
+  GapZ: 0.4
   WindGap: 32
   WindSpeed: 8
   WindDir: {x: 0.5, y: 0, z: 0.5}
   WindNoise: {fileID: 2800000, guid: 84a6a9d7716c4d54f983f7b5fa293ec9, type: 3}
   RoleTargets: []
   Ground: {fileID: 2034683552}
+  Distance: 150
   GrassMesh: {fileID: 4300000, guid: 74abc0fcf0cda7e4cb7757175c8a1608, type: 2}
   GrassMat: {fileID: 2100000, guid: 4e2c0550ff1ba2a408d8d9e33d5d0bdf, type: 2}
   ViewFrustumCulling: {fileID: 7200000, guid: 05fd5881f2bb65a4aa4065037a9f2a89, type: 3}
   HizmipmapMat: {fileID: 2100000, guid: 305f34e8b9ebf74468e61a2049444e87, type: 2}
-  TakeDepthMat: {fileID: 2100000, guid: 6b9ec2837e71df54988d8c7a48681b43, type: 2}
 --- !u!1001 &384937332581194308
 PrefabInstance:
   m_ObjectHideFlags: 0

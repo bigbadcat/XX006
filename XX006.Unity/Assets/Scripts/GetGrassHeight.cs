@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using XuXiang;
 using XX006;
 
 public class GetGrassHeight : MonoBehaviour
@@ -29,6 +30,8 @@ public class GetGrassHeight : MonoBehaviour
     public Transform[] RoleTargets;
 
     public Terrain Ground;
+        
+    public float Distance = 10;
 
     public Mesh GrassMesh;
     public Material GrassMat;
@@ -64,6 +67,10 @@ public class GetGrassHeight : MonoBehaviour
         int row = (int)(AreaY / GapZ) + 1;
 
         TerrainData td = Ground.terrainData;
+        Vector3 mypos = transform.position;
+        int n = 0;
+        float min_h = 0;
+        float max_h = 0;
         for (int i=0; i< row; ++i)
         {
             for (int j=0; j< col; ++j)
@@ -72,11 +79,32 @@ public class GetGrassHeight : MonoBehaviour
                 float z = j * GapZ + Random.Range(0, GapZ / 2);
                 float h = td.GetInterpolatedHeight(x / 100, z / 100);
                 Vector3 pos = new Vector3(x, h - 0.002f, z);     //草要往下种一点点距离
-                Quaternion q = Quaternion.Euler(0, Random.Range(-90, 90), 0);
-                m_GrassManager.AddGrass(0, pos, Matrix4x4.TRS(pos, q, new Vector3(0.5f, Random.Range(0.5f, 1.2f), 1)));
+                mypos.y = pos.y;
+                if ((mypos-pos).sqrMagnitude < Distance * Distance)
+                {
+                    Quaternion q = Quaternion.Euler(0, Random.Range(-90, 90), 0);
+                    //float rs = Random.Range(0.4f, 0.8f);
+                    //float ry = rs * Random.Range(0.5f, 1.2f);
+                    float rs = Random.Range(0.4f, 0.8f);
+                    float ry = (float)System.Math.Sqrt((-2) * System.Math.Log(Random.Range(0, 1.0f), System.Math.E)) / 5;       //高度按标准正态分布随机
+                    ry = 0.25f + ry * 0.75f;
+                    ry = ry * 3.5f * rs;
+                    m_GrassManager.AddGrass(0, pos, Matrix4x4.TRS(pos, q, new Vector3(rs, ry, 1)));
+                    ++n;
+
+                    if (n == 1)
+                    {
+                        min_h = max_h = ry;
+                    }
+                    else
+                    {
+                        min_h = Mathf.Min(min_h, ry);
+                        max_h = Mathf.Max(max_h, ry);
+                    }
+                }                
             }
         }
-
+        Log.Info("GrassCount:{0} minh:{1} maxh:{2}", n, min_h, max_h);
         GrassMat.SetVector("_Move", new Vector4(WindDir.x, WindDir.y, WindDir.z, 0));
     }
 

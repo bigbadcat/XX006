@@ -182,34 +182,42 @@ namespace XX006
             RenderTexture depth_tex = HizDepthTexture;
             s_HizDepthUpdateFrame = Time.frameCount;
 
-            int w = depth_tex.width;
-            int mipmap_level = 0;
-            RenderTexture last_rt = null;   //上一层的mipmap，即mipmapLevel-1对应的mipmap
-            while (w >= 16)
+            Graphics.Blit(Shader.GetGlobalTexture(s_PID_CameraDepthTexture), s_HizDepthTextureTmp[0]);
+            Graphics.CopyTexture(s_HizDepthTextureTmp[0], 0, 0, depth_tex, 0, 0);
+            for (int i = 1; i < s_HizDepthTextureTmp.Length; ++i)
             {
-                RenderTexture cur_rt = RenderTexture.GetTemporary(w, w, 0, RenderTextureFormat.RHalf);
-                cur_rt.filterMode = FilterMode.Point;
-                if (last_rt == null)
-                {
-                    //Mipmap[0]，copy原始的深度图，需要先用Graphics.Blit将原色深度图拉伸到cur_rt中，再CopyTexture
-                    Graphics.Blit(Shader.GetGlobalTexture(s_PID_CameraDepthTexture), cur_rt);
-                }
-                else
-                {
-                    //通过HizMipmap对应的材质将Mipmap[i]Blit到Mipmap[i+1]上
-                    s_HizMipmapMat.SetTexture("_MainTex", last_rt);
-                    Graphics.Blit(last_rt, cur_rt, s_HizMipmapMat);
-                    RenderTexture.ReleaseTemporary(last_rt);
-                }
-                Graphics.CopyTexture(cur_rt, 0, 0, depth_tex, 0, mipmap_level);
-                last_rt = cur_rt;
-
-                w /= 2;
-                mipmap_level++;
+                Graphics.Blit(s_HizDepthTextureTmp[i - 1], s_HizDepthTextureTmp[i], s_HizMipmapMat);
+                Graphics.CopyTexture(s_HizDepthTextureTmp[i], 0, 0, depth_tex, 0, i);
             }
 
-            RenderTexture.ReleaseTemporary(last_rt);
-            last_rt = null;
+            //int w = depth_tex.width;
+            //int mipmap_level = 0;
+            //RenderTexture last_rt = null;   //上一层的mipmap，即mipmapLevel-1对应的mipmap
+            //while (w >= 16)
+            //{
+            //    RenderTexture cur_rt = RenderTexture.GetTemporary(w, w, 0, RenderTextureFormat.RHalf);
+            //    cur_rt.filterMode = FilterMode.Point;
+            //    if (last_rt == null)
+            //    {
+            //        //Mipmap[0]，copy原始的深度图，需要先用Graphics.Blit将原色深度图拉伸到cur_rt中，再CopyTexture
+            //        Graphics.Blit(Shader.GetGlobalTexture(s_PID_CameraDepthTexture), cur_rt);
+            //    }
+            //    else
+            //    {
+            //        //通过HizMipmap对应的材质将Mipmap[i]Blit到Mipmap[i+1]上
+            //        s_HizMipmapMat.SetTexture("_MainTex", last_rt);
+            //        Graphics.Blit(last_rt, cur_rt, s_HizMipmapMat);
+            //        RenderTexture.ReleaseTemporary(last_rt);
+            //    }
+            //    Graphics.CopyTexture(cur_rt, 0, 0, depth_tex, 0, mipmap_level);
+            //    last_rt = cur_rt;
+
+            //    w /= 2;
+            //    mipmap_level++;
+            //}
+
+            //RenderTexture.ReleaseTemporary(last_rt);
+            //last_rt = null;
         }
 
         public static RenderTexture HizDepthTexture
@@ -224,6 +232,14 @@ namespace XX006
                     s_HizDepthTexture.useMipMap = true;
                     s_HizDepthTexture.filterMode = FilterMode.Point;
                     s_HizDepthTexture.Create();
+
+                    int w = size;
+                    for (int i=0; i< s_HizDepthTextureTmp.Length; ++i)
+                    {
+                        s_HizDepthTextureTmp[i] = RenderTexture.GetTemporary(w, w, 0, RenderTextureFormat.RHalf);
+                        s_HizDepthTextureTmp[i].filterMode = FilterMode.Point;
+                        w /= 2;
+                    }
                 }
                 return s_HizDepthTexture;
             }
@@ -267,7 +283,6 @@ namespace XX006
                     s_PID_CameraPlanes = Shader.PropertyToID("_CameraPlanes");
                     s_PID_CameraVPMatrix = Shader.PropertyToID("_CameraVPMatrix");
                     s_PID_HizDepthTexture = Shader.PropertyToID("_HizDepthTexture");
-                    s_PID_HizDepthTextureSize = Shader.PropertyToID("_HizDepthTextureSize");
                     s_PID_BoundPoints = Shader.PropertyToID("_BoundPoints");
                     s_PID_Wind = Shader.PropertyToID("_Wind");
                     s_PID_WindGap = Shader.PropertyToID("_WindGap");
@@ -288,7 +303,6 @@ namespace XX006
         private static int s_PID_CameraVPMatrix = 0;
         private static int s_PID_BoundPoints = 0;
         private static int s_PID_HizDepthTexture = 0;
-        private static int s_PID_HizDepthTextureSize = 0;
         private static int s_PID_Wind = 0;
         private static int s_PID_WindGap = 0;
         private static int s_PID_WindDir = 0;
@@ -299,6 +313,7 @@ namespace XX006
         /// 带mipmap的深度图。
         /// </summary>
         private static RenderTexture s_HizDepthTexture = null;
+        private static RenderTexture[] s_HizDepthTextureTmp = new RenderTexture[5];
         private static Texture s_WindNoise = null;
 
         private static int s_HizDepthUpdateFrame = -1;
@@ -350,12 +365,10 @@ namespace XX006
                 //ViewFrustumCulling.SetVectorArray(s_PID_CameraPlanes, GeometryUtil.GetFrustumPlane(Camera.main, s_CachePlanes));
                 ViewFrustumCulling.SetVectorArray(s_PID_BoundPoints, GeometryUtil.GetBoundPoints(m_BoundCenter, m_BoundSize, s_BoundPoints));
                 ViewFrustumCulling.SetTexture(s_Kernel, s_PID_HizDepthTexture, s_HizDepthTexture);
-                ViewFrustumCulling.SetInt(s_PID_HizDepthTextureSize, s_HizDepthTexture.width);
 
                 //设置风的参数
                 float fm = Mathf.Sqrt(dir.x * dir.x + dir.y * dir.y + dir.z * dir.z);
                 Vector4 wdir = new Vector4(dir.x, dir.y, dir.z, fm);
-                //Vector3 rpos = s_RoleTarget == null ? Vector3.zero : s_RoleTarget.position;
                 ViewFrustumCulling.SetFloat(s_PID_Wind, wind);
                 ViewFrustumCulling.SetFloat(s_PID_WindGap, gap);
                 ViewFrustumCulling.SetVector(s_PID_WindDir, wdir);
@@ -373,7 +386,7 @@ namespace XX006
                 ViewFrustumCulling.SetInt(s_PID_InstanceCount, m_CurCount);
                 ViewFrustumCulling.SetBuffer(s_Kernel, "_InstancingBuffer", m_LocalToWorldMatrixBuffer);
                 ViewFrustumCulling.SetBuffer(s_Kernel, "_CullResult", m_CullResult);
-                ViewFrustumCulling.Dispatch(s_Kernel, (int)Mathf.Ceil(m_CurCount / 128.0f), 1, 1);
+                ViewFrustumCulling.Dispatch(s_Kernel, (int)Mathf.Ceil(m_CurCount / 512.0f), 1, 1);
 
                 ComputeBuffer.CopyCount(m_CullResult, m_ArgsBuffer, sizeof(uint));
                 material.SetBuffer("_InstancingBuffer", m_CullResult);
@@ -410,7 +423,7 @@ namespace XX006
             m_CurCount = m_Datas.Count;
             m_LocalToWorldMatrixBuffer = new ComputeBuffer(m_CurCount, sizeof(float) * (16 + 8));
             m_LocalToWorldMatrixBuffer.SetData(m_Datas);
-            m_CullResult = new ComputeBuffer(m_CurCount, sizeof(float) * (16 + 1), ComputeBufferType.Append);
+            m_CullResult = new ComputeBuffer(m_CurCount, sizeof(float) * (16 + 8), ComputeBufferType.Append);
 
             if (m_ArgsBuffer == null)
             {

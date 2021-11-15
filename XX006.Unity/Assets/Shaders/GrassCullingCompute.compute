@@ -14,7 +14,6 @@ float4 _CameraPlanes[6];
 float4x4 _CameraVPMatrix;         //camera vp matrix.
 float4 _BoundPoints[8];
 Texture2D _HizDepthTexture;
-uint _HizDepthTextureSize;
 
 float _Wind;
 float _WindGap;
@@ -37,7 +36,6 @@ bool IsInClipSpace(float4 clip_pos)
 
 bool IsCulling(float4x4 trs)
 {
-    //float min_x = 1, min_y = 1, min_z = 1, max_x = -1, max_y = -1, max_z = -1;    //AABB for NDC
     bool in_clip = false;
     float4x4 mvpMatrix = mul(_CameraVPMatrix, trs);
     float4 cps[8];
@@ -50,37 +48,27 @@ bool IsCulling(float4x4 trs)
     bool depth_culling = false;
     if (in_clip)
     {
-        //float min_x = 1, min_y = 1, max_x = -1, max_y = -1, max_z = -1;    //AABB for NDC
-        float3 min_p = float3(1, 1, 1);
+        float3 min_p = float3(1, 1, 1);             //AABB for NDC
         float3 max_p = float3(-1, -1, -1);
         for (int i = 0; i < 8; i++)
         {
             float4 clip_pos = cps[i];
             float3 ndc = clip_pos.xyz / clip_pos.w;
-            //min_x = min(min_x, ndc.x);
-            //min_y = min(min_y, ndc.y);
-            ////min_z = min(min_z, ndc.z);
-            //max_x = max(max_x, ndc.x);
-            //max_y = max(max_y, ndc.y);
-            //max_z = max(max_z, ndc.z);
             min_p = min(min_p, ndc);
             max_p = max(max_p, ndc);
         }
 
         //ncd[-1,1] to uv[0,1]
-        //float2 uv_center = float2(min_x + max_x, min_y + max_y) / 2 * 0.5f + 0.5f;
         float2 uv_center = (min_p + max_p).xy / 2 * 0.5f + 0.5f;
 
         //select mipmap level
         uint tex_size = 256;
-        //uint mipmap_level = (uint)clamp(log2(max(max_x - min_x, max_y - min_y) * tex_size) + 1, 0, 4);      //size[16,256]->mip[4,0]
         uint mipmap_level = (uint)clamp(log2(max(max_p.x - min_p.x, max_p.y - min_p.y) * tex_size) + 1, 0, 4);      //size[16,256]->mip[4,0]
         uint size = tex_size / (1 << mipmap_level);
 
         //compare depth value culling
         uint2 pixel_center = uint2(clamp(uv_center.x * size, 0, size - 1), clamp(uv_center.y * size, 0, size - 1));
         float depth_tex = _HizDepthTexture.mips[mipmap_level][pixel_center].r;
-        //depth_culling = max_z < depth_tex;      //The smaller the farther
         depth_culling = max_p.z < depth_tex;      //The smaller the farther
     }
     return !in_clip || depth_culling;
@@ -104,27 +92,29 @@ fixed4 Tex2DWrap(Texture2D tex, uint2 size, float2 uv)
 
 float4 GetBend(float3 pos)
 {
-    float bend_max = 1;
-    float bend_min = 0.3;
-    float3 bend_dir = float3(0, 0, 0);
-    float bend_rate = 0;
+    float4 bend_dir = float4(0, 0, 0, 0);
     for (uint i=0; i<_RoleCount; ++i)
     {
-        float3 dir = pos - _RoleInfos[i].xyz;
+        float4 ri = _RoleInfos[i];
+        float3 dir = pos - ri.xyz;
+        float bend_max = 1 * ri.w;
+        float bend_min = 0.3 * ri.w;
         float bend_dis_2 = dot(dir,dir);
         if (bend_dis_2 < bend_max * bend_max)
         {
             float br = 1 - smoothstep(bend_min, bend_max, sqrt(bend_dis_2));
-            bend_dir += normalize(dir) * br;
-            bend_rate = max(bend_rate, br);
+            bend_dir.xyz += normalize(dir) * br;
+            bend_dir.w = max(bend_dir.w, br);
         }
     }
-
-    return bend_rate > 0 ? float4(normalize(bend_dir), bend_rate) : float4(0, 0, 0, 0);
-    //return float4(0, 0, 0, bend_rate);
+    if (bend_dir.w > 0)
+    {
+        bend_dir.xyz = normalize(bend_dir.xyz);
+    }    
+    return bend_dir;
 }
 
-[numthreads(128, 1, 1)]
+[numthreads(512, 1, 1)]
 void CSMain (uint3 id : SV_DispatchThreadID)
 {
     if(id.x >= _InstanceCount)
@@ -141,20 +131,16 @@ void CSMain (uint3 id : SV_DispatchThreadID)
 
     //compute wind
     float3 pos = data.trs._14_24_34;        //_14_24_34 = position
-    float dis = (pos.x * _WindDir.x + pos.y * _WindDir.y + pos.z * _WindDir.z) / _WindDir.w;
-    int noise_size = 256;
     float2 noise_uv = (-_WindDir.xz * _Wind + pos.xz) / _WindGap;       //UV move in the opposite direction
-    float rate = Tex2DWrap(_WindNoise, uint2(noise_size, noise_size), noise_uv).r * 1;
+    float rate = Tex2DWrap(_WindNoise, uint2(256, 256), noise_uv).r * 1;
     data.wind.xyz = _WindDir.xyz + _WindDir.zyx * (rate - 0.5);         //swing
     data.wind.w = rate;
 
-    //float3 dir = pos - _RolePos.xyz;
-    //float bend_rate = 1 - smoothstep(0.3, 1, sqrt(dot(dir,dir)));
-    //data.bend.xyz = normalize(dir) * (1 - rate * 0.5);
-
+    //compute bend
     float4 bend = GetBend(pos);
     data.bend = bend;
     data.bend.w *= 1 - rate * 0.5;
     data.wind.w *= 1 - bend.w * 0.5;
+
     _CullResult.Append(data);
 }
