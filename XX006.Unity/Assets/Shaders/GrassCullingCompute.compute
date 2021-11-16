@@ -24,10 +24,11 @@ uint _RoleCount;
 float4 _RoleInfos[8];
 
 uint _InstanceCount;
-StructuredBuffer<instancing_data> _InstancingBuffer;
+//StructuredBuffer<instancing_data> _InstancingBuffer;
+StructuredBuffer<float4x4> _InstancingBuffer;
 AppendStructuredBuffer<instancing_data> _CullResult;
 
-bool IsInClipSpace(float4 clip_pos)
+inline bool IsInClipSpace(float4 clip_pos)
 {
     return clip_pos.x > -clip_pos.w && clip_pos.x < clip_pos.w
     && clip_pos.y > -clip_pos.w && clip_pos.y < clip_pos.w
@@ -36,6 +37,7 @@ bool IsInClipSpace(float4 clip_pos)
 
 bool IsCulling(float4x4 trs)
 {
+    //view frushtum culling
     bool in_clip = false;
     float4x4 mvpMatrix = mul(_CameraVPMatrix, trs);
     float4 cps[8];
@@ -48,6 +50,7 @@ bool IsCulling(float4x4 trs)
     bool depth_culling = false;
     if (in_clip)
     {
+        //Hiz depth culling
         float3 min_p = float3(1, 1, 1);             //AABB for NDC
         float3 max_p = float3(-1, -1, -1);
         for (int i = 0; i < 8; i++)
@@ -72,6 +75,19 @@ bool IsCulling(float4x4 trs)
         depth_culling = max_p.z < depth_tex;      //The smaller the farther
     }
     return !in_clip || depth_culling;
+}
+
+bool IsCullingSimple(float4x4 trs)
+{
+    //view frushtum culling
+    bool in_clip = false;
+    float4x4 mvpMatrix = mul(_CameraVPMatrix, trs);
+    for (int i = 0; i < 8 && !in_clip; i++)
+    {
+        float4 cp = mul(mvpMatrix, _BoundPoints[i]);
+        in_clip = IsInClipSpace(cp);
+    }
+    return !in_clip;
 }
 
 fixed4 Tex2DWrap(Texture2D tex, uint2 size, float2 uv)
@@ -122,17 +138,33 @@ void CSMain (uint3 id : SV_DispatchThreadID)
         return;
     }
 
-    //view frushtum culling
-    instancing_data data = _InstancingBuffer[id.x];
-    if (IsCulling(data.trs))
+    //instancing_data data = _InstancingBuffer[id.x];
+    float4x4 trs = _InstancingBuffer[id.x];
+    //if (IsCulling(trs))
+    //{
+    //    return;
+    //}
+
+    bool in_clip = false;
+    float4x4 mvpMatrix = mul(_CameraVPMatrix, trs);
+    for (int i = 0; i < 8 && !in_clip; i++)
+    {
+        float4 cp = mul(mvpMatrix, _BoundPoints[i]);
+        in_clip = IsInClipSpace(cp);
+    }
+    if (!in_clip)
     {
         return;
     }
 
     //compute wind
-    float3 pos = data.trs._14_24_34;        //_14_24_34 = position
+    float3 pos = trs._14_24_34;        //_14_24_34 = position
+    //float3 pos = data.trs._14_24_34;        //_14_24_34 = position
     float2 noise_uv = (-_WindDir.xz * _Wind + pos.xz) / _WindGap;       //UV move in the opposite direction
     float rate = Tex2DWrap(_WindNoise, uint2(256, 256), noise_uv).r * 1;
+
+    instancing_data data;
+    data.trs = trs;
     data.wind.xyz = _WindDir.xyz + _WindDir.zyx * (rate - 0.5);         //swing
     data.wind.w = rate;
 

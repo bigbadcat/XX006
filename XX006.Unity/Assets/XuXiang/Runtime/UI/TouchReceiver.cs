@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Text;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -42,6 +43,54 @@ namespace XuXiang
             void OnClick(float x, float y);
         }
 
+        /// <summary>
+        /// 触摸信息。
+        /// </summary>
+        public class TouchInfo
+        {
+            public TouchInfo()
+            {
+                pointerId = 0;
+                cache = false;
+            }
+
+            public int pointerId;
+            public Vector2 delta;
+            public Vector2 position;
+
+            public override string ToString()
+            {
+                return string.Format("pid:{0} pos:{1} delta:{2}", pointerId, position, delta);
+            }
+
+            private bool cache;
+
+            public static TouchInfo Get()
+            {
+                TouchInfo info = s_CacheInfo.Count > 0 ? s_CacheInfo.Pop() : new TouchInfo();
+                info.cache = false;
+                return info;
+            }
+
+            public static void Recycle(TouchInfo info)
+            {
+                if (info.cache || s_CacheInfo.Count >= MaxCache)
+                {
+                    return;
+                }
+
+                info.pointerId = 0;
+                info.delta = Vector2.zero;
+                info.position = Vector2.zero;
+                info.cache = true;
+                s_CacheInfo.Push(info);
+            }
+
+            public static int MaxCache = 10;
+
+            private static Stack<TouchInfo> s_CacheInfo = new Stack<TouchInfo>();
+        }
+
         #region 对外操作----------------------------------------------------------------
 
         /// <summary>
@@ -53,13 +102,32 @@ namespace XuXiang
             PointerEventData ped = data as PointerEventData;
             m_CheckClick = true;
             m_TouchPosition = ped.position;
-            m_TouchDownCount = LongPressTime;
-            m_MoveClick = false;
-#if !UNITY_EDITOR
-            m_TouchDown = true;
+
+            //m_TouchDown = true;
             m_OldDistance = 0;
-#endif
+
+            if (!m_TouchInfos.ContainsKey(ped.pointerId))
+            {
+                TouchInfo info = TouchInfo.Get();
+                info.pointerId = ped.pointerId;
+                info.position = ped.position;
+                m_TouchInfos.Add(info.pointerId, info);
+                //UpdateTouchInfo();
+            }
         }
+
+        //void UpdateTouchInfo()
+        //{
+        //    StringBuilder sb = new StringBuilder();
+        //    sb.AppendFormat("TouchCount:{0}", m_TouchInfos.Count);
+            
+        //    foreach (var kvp in m_TouchInfos)
+        //    {
+        //        sb.AppendLine();
+        //        sb.Append(kvp.Value.ToString());
+        //    }
+        //    InfoText.text = sb.ToString();
+        //}
 
         /// <summary>
         /// 触摸拖拽。
@@ -69,43 +137,50 @@ namespace XuXiang
         {
             //取消点击的判断距离
             PointerEventData ped = data as PointerEventData;
+            TouchInfo info;
+            if (m_TouchInfos.TryGetValue(ped.pointerId, out info))
+            {
+                info.position = ped.position;
+                info.delta = ped.delta;
+                //UpdateTouchInfo();
+            }
+
             if (m_CheckClick)
             {
-                if ((ped.position - m_TouchPosition).sqrMagnitude >= CancelClickDistance * CancelClickDistance)
+                if (m_TouchInfos.Count >= 2 || (ped.position - m_TouchPosition).sqrMagnitude >= CancelClickDistance * CancelClickDistance)
                 {
                     m_CheckClick = false;
-                    m_TouchDownCount = 0;
-                    m_MoveClick = false;
                 }
-            }
-            else if (m_MoveClick)
-            {
-                //GameManager.Instance.Click(ped.position.x, ped.position.y);
             }
 
-#if UNITY_EDITOR
-
-            if (!m_CheckClick && !m_MoveClick)
+            if (m_TouchInfos.Count == 1)
             {
-                Vector2 delta = ped.delta;
-                if (Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl))
+                foreach (var kvp in m_TouchInfos)
                 {
-                    //缩放
-                    float d = (delta.x + delta.y) / 2;
-                    Scale(d);
-                }
-                //else if (Input.GetKey(KeyCode.D))
-                //{
-                //    //平移                
-                //    Move(delta.x, delta.y);
-                //}
-                else
-                {
-                    //旋转
-                    Rotate(delta.x, delta.y);
+                    CheckSingle(kvp.Value);
                 }
             }
-#endif
+            else if (m_TouchInfos.Count == 2)
+            {
+                TouchInfo info1 = null;
+                TouchInfo info2 = null;
+                foreach (var kvp in m_TouchInfos)
+                {
+                    if (info1 == null)
+                    {
+                        info1 = kvp.Value;
+                    }
+                    else
+                    {
+                        info2 = kvp.Value;
+                    }                    
+                }
+                CheckTwo(info1, info2);
+            }   
+            else
+            {
+                m_OldDistance = 0;
+            }
         }
 
         /// <summary>
@@ -115,29 +190,28 @@ namespace XuXiang
         public void OnPointUp(BaseEventData data)
         {
             PointerEventData ped = data as PointerEventData;
-            if (m_CheckClick)           //游戏模式才可以点方块
+            if (m_CheckClick)
             {
-                //GameManager.Instance.Click(ped.position.x, ped.position.y);
                 m_Processer?.OnClick(ped.position.x, ped.position.y);
                 m_CheckClick = false;
             }
-            if (m_MoveClick)
+            //m_TouchDown = false;
+
+            TouchInfo info;
+            if (m_TouchInfos.TryGetValue(ped.pointerId, out info))
             {
-                m_MoveClick = false;
+                m_TouchInfos.Remove(ped.pointerId);
+                TouchInfo.Recycle(info);
+                info = null;
+                //UpdateTouchInfo();
             }
-#if !UNITY_EDITOR
-            m_TouchDown = false;
-#endif
         }
 
         #endregion
 
         #region 对外属性----------------------------------------------------------------
 
-        /// <summary>
-        /// 长按时间。
-        /// </summary>
-        public float LongPressTime = 0.5f;
+        //public TMPro.TextMeshProUGUI InfoText;
 
         /// <summary>
         /// 旋转系数。
@@ -167,80 +241,36 @@ namespace XuXiang
 
         #region 内部操作----------------------------------------------------------------
 
-
-        /// <summary>
-        /// 帧更新。
-        /// </summary>
-        public void Update()
-        {
-            if (m_TouchDownCount > 0)
-            {
-                m_TouchDownCount -= Time.deltaTime;
-                if (m_TouchDownCount <= 0)
-                {
-                    m_CheckClick = false;
-                    m_MoveClick = true;
-                    m_TouchDownCount = 0;
-                    //GameManager.Instance.Click(m_TouchPosition.x, m_TouchPosition.y);
-                }
-            }
-
-#if !UNITY_EDITOR
-            if (m_TouchDown)
-            {
-                CheckTouch();
-            }            
-#endif
-        }
-
-#if !UNITY_EDITOR
-
-        /// <summary>
-        /// 触摸检测。
-        /// </summary>
-        private void CheckTouch()
-        {
-            if (Input.touchCount == 1)
-            {
-                CheckSingle(Input.GetTouch(0));
-                m_OldDistance = 0;
-            }
-            else if (Input.touchCount == 2)
-            {
-                m_TouchDownCount = 0;
-                m_MoveClick = false;
-                m_CheckClick = false;
-                CheckTwo(Input.GetTouch(0), Input.GetTouch(1));
-            }
-            else
-            {
-                m_OldDistance = 0;
-            }
-        }
-
         /// <summary>
         /// 检查单个手指的触摸情况。
         /// </summary>
         /// <param name="touch">触摸数据。</param>
-        private void CheckSingle(Touch touch)
+        private void CheckSingle(TouchInfo touch)
         {
-            if (touch.phase == TouchPhase.Began)
+            if (!m_CheckClick)
             {
-                m_CheckClick = true;
-                m_TouchPosition = touch.position;
-            }
-            else if (touch.phase == TouchPhase.Moved)
-            {
-                if (!m_CheckClick && !m_MoveClick)
+                Vector2 delta = touch.delta;
+#if UNITY_EDITOR
+                if (Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl))
+                {
+                    //缩放
+                    float d = (delta.x + delta.y) / 2;
+                    Scale(d);
+                }
+                else if (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift))
+                {
+                    //平移                
+                    Move(delta.x, delta.y);
+                }
+                else
                 {
                     //旋转
-                    Vector2 delta = touch.deltaPosition;
                     Rotate(delta.x, delta.y);
                 }
-            }
-            else if (touch.phase == TouchPhase.Ended)
-            {
-                m_CheckClick = false;
+#else
+                //旋转
+                Rotate(delta.x, delta.y);
+#endif
             }
         }
 
@@ -249,14 +279,8 @@ namespace XuXiang
         /// </summary>
         /// <param name="touch1">手指1触摸数据。</param>
         /// <param name="touch2">手指2触摸数据。</param>
-        private void CheckTwo(Touch touch1, Touch touch2)
+        private void CheckTwo(TouchInfo touch1, TouchInfo touch2)
         {
-            //至少有一个点在移动
-            if (touch1.phase != TouchPhase.Moved && touch2.phase == TouchPhase.Moved)
-            {
-                return;
-            }
-
             float dis = Vector2.Distance(touch1.position, touch2.position);
             if (m_OldDistance <= 0)
             {
@@ -265,10 +289,10 @@ namespace XuXiang
             else
             {
                 //根据移动夹角判断操作
-                if (Vector2.Angle(touch1.deltaPosition, touch2.deltaPosition) < 90)
+                if (Vector2.Angle(touch1.delta, touch2.delta) < 90)
                 {
                     //两点的移动量控制平移
-                    Vector2 deltamove = (touch1.deltaPosition + touch2.deltaPosition) / 2;
+                    Vector2 deltamove = (touch1.position + touch2.position) / 2;
                     Move(deltamove.x, deltamove.y);
                     m_OldDistance = dis;
                 }        
@@ -282,9 +306,6 @@ namespace XuXiang
             }
         }
 
-#endif
-
-
         /// <summary>
         /// 旋转操作。
         /// </summary>
@@ -292,8 +313,6 @@ namespace XuXiang
         /// <param name="dy">Y屏幕移动量。</param>
         private void Rotate(float dx, float dy)
         {
-            //GameManager.Instance.Rotate(-dy * RotateRatio, dx * RotateRatio);
-            //Log.Info("Rotate:({0},{1})", dx, dy);
             m_Processer?.OnRotate(dx * RotateRatio, dy * RotateRatio);
         }
 
@@ -304,7 +323,7 @@ namespace XuXiang
         /// <param name="dy">Y屏幕移动量。</param>
         private void Move(float dx, float dy)
         {
-            //GameManager.Instance.Move(dx * MoveRatio, dy * MoveRatio);
+            m_Processer?.OnMove(dx * MoveRatio, dy * MoveRatio);
         }
 
         /// <summary>
@@ -313,8 +332,6 @@ namespace XuXiang
         /// <param name="d">屏幕移动量。</param>
         private void Scale(float d)
         {
-            //GameManager.Instance.Scale(d * ScaleRatio);
-            //Log.Info("Scale:{0}", d);
             m_Processer?.OnScale(d * ScaleRatio);
         }
 
@@ -327,18 +344,15 @@ namespace XuXiang
         /// </summary>
         private static float CancelClickDistance = 25;
 
-#if !UNITY_EDITOR
-        
         /// <summary>
         /// 缩放操作的两点距离。
         /// </summary>
         private float m_OldDistance = 0;
         
-        /// <summary>
-        /// 是否按下，用于只检测区域内的Touch。
-        /// </summary>
-        private bool m_TouchDown = false;
-#endif
+        ///// <summary>
+        ///// 是否按下，用于只检测区域内的Touch。
+        ///// </summary>
+        //private bool m_TouchDown = false;
 
         /// <summary>
         /// 按下位置。
@@ -351,19 +365,14 @@ namespace XuXiang
         private bool m_CheckClick = false;
 
         /// <summary>
-        /// 是否在移动的过程中点击。
-        /// </summary>
-        private bool m_MoveClick = false;
-
-        /// <summary>
-        /// 按下的时间计数。
-        /// </summary>
-        private float m_TouchDownCount = 0;
-
-        /// <summary>
         /// 触摸处理者。
         /// </summary>
         private ITouchProcesser m_Processer = null;
+
+        /// <summary>
+        /// 当前触摸的信息。
+        /// </summary>
+        private Dictionary<int, TouchInfo> m_TouchInfos = new Dictionary<int, TouchInfo>();
 
         #endregion
     }

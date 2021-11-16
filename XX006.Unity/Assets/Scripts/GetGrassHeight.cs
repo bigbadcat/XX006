@@ -46,7 +46,8 @@ public class GetGrassHeight : MonoBehaviour
     void Start()
     {
         GrassChunk.ViewFrustumCulling = ViewFrustumCulling;
-        GrassChunk.HizMipmapMat = HizmipmapMat;
+        //GrassChunk.HizMipmapMat = HizmipmapMat;
+        HizManager.Instance.MipmapMat = HizmipmapMat;
         GrassChunk.WindNoise = WindNoise;
         GrassChunk.s_RoleTargetCount = RoleTargets == null ? 0 : Mathf.Min(RoleTargets.Length, GrassChunk.s_RoleTargets.Length);
         for (int i=0; i< GrassChunk.s_RoleTargetCount; ++i)
@@ -54,6 +55,9 @@ public class GetGrassHeight : MonoBehaviour
             GrassChunk.s_RoleTargets[i] = RoleTargets[i];
         }
         BuildGrass();
+
+        GrassMat.EnableKeyword("SHADOWS_SCREEN");
+        GrassMat.EnableKeyword("SHADOWS_DEPTH");
     }
 
     public void BuildGrass()
@@ -71,10 +75,15 @@ public class GetGrassHeight : MonoBehaviour
         int n = 0;
         float min_h = 0;
         float max_h = 0;
+
+        Dictionary<int, List<Matrix4x4>> id_chunk = new Dictionary<int, List<Matrix4x4>>();
+        int ch_split = 6;
         for (int i=0; i< row; ++i)
         {
+            int ia = Mathf.Min(i * ch_split / row, ch_split-1);
             for (int j=0; j< col; ++j)
             {
+                int ja = Mathf.Min(j * ch_split / col, ch_split-1);
                 float x = i * GapX + Random.Range(0, GapX / 2);
                 float z = j * GapZ + Random.Range(0, GapZ / 2);
                 float h = td.GetInterpolatedHeight(x / 100, z / 100);
@@ -85,11 +94,12 @@ public class GetGrassHeight : MonoBehaviour
                     Quaternion q = Quaternion.Euler(0, Random.Range(-90, 90), 0);
                     //float rs = Random.Range(0.4f, 0.8f);
                     //float ry = rs * Random.Range(0.5f, 1.2f);
-                    float rs = Random.Range(0.4f, 0.8f);
+                    float rs = Random.Range(0.1f, 0.15f);
                     float ry = (float)System.Math.Sqrt((-2) * System.Math.Log(Random.Range(0, 1.0f), System.Math.E)) / 5;       //高度按标准正态分布随机
                     ry = 0.25f + ry * 0.75f;
-                    ry = ry * 3.5f * rs;
-                    m_GrassManager.AddGrass(0, pos, Matrix4x4.TRS(pos, q, new Vector3(rs, ry, 1)));
+                    ry = ry * 2.0f;
+                    Matrix4x4 trs = Matrix4x4.TRS(pos, q, new Vector3(rs, ry, 1));
+                    //m_GrassManager.AddGrass(0, pos, Matrix4x4.TRS(pos, q, new Vector3(rs, ry, 1)));
                     ++n;
 
                     if (n == 1)
@@ -101,19 +111,37 @@ public class GetGrassHeight : MonoBehaviour
                         min_h = Mathf.Min(min_h, ry);
                         max_h = Mathf.Max(max_h, ry);
                     }
+
+
+                    List<Matrix4x4> trs_list;
+                    int id = ia * 10 + ja;
+                    if (!id_chunk.TryGetValue(id, out trs_list))
+                    {
+                        trs_list = new List<Matrix4x4>();
+                        id_chunk.Add(id, trs_list);
+                    }
+                    trs_list.Add(trs);
                 }                
             }
         }
-        Log.Info("GrassCount:{0} minh:{1} maxh:{2}", n, min_h, max_h);
+        //PVE收入 1700W+5800W+2800W+3400W=13700W
+        Log.Info("GrassCount:{0} minh:{1} maxh:{2} chunk:{3}-{4}", n, min_h, max_h, id_chunk.Count, n/id_chunk.Count);
         GrassMat.SetVector("_Move", new Vector4(WindDir.x, WindDir.y, WindDir.z, 0));
+        foreach (var kvp in id_chunk)
+        {
+            GrassChunk chunk = m_GrassManager.GetOrCreateChunk(kvp.Key);
+            chunk.AddGrass(kvp.Value);
+            chunk.GrassMat = new Material(GrassMat);
+        }
     }
 
-    public void Update()
+    public void LateUpdate()
     {
+        Camera camera = Camera.main;
         if (GrassMesh != null && GrassMat != null)
         {
             m_Wind += Time.deltaTime * WindSpeed;
-            m_GrassManager.DrawGrass(m_Wind, WindGap, this.transform.forward, GrassMesh, 0, GrassMat);
+            m_GrassManager.DrawGrass(m_Wind, WindGap, this.transform.forward, GrassMesh, 0, camera);
         }
     }
 

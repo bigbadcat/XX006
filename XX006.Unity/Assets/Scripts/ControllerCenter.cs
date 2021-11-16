@@ -19,14 +19,6 @@ namespace XX006
         /// <param name="dir">移动方向。</param>
         public void DoMove(Vector3 dir)
         {
-            //Player p = GameManager.Instance.Stage.MainPlayer;
-            //if (p != null)
-            //{
-            //    float d = ShapeUtil.NormalizeAngle(90 - (Mathf.Atan2(dir.z, dir.x) * Mathf.Rad2Deg));
-            //    p.TryMove(d);
-            //    //Log.Info("DoMove dir:{0}", d);
-            //}
-
             if (m_Target != null)
             {
                 float d = ShapeUtil.NormalizeAngle(90 - (Mathf.Atan2(dir.z, dir.x) * Mathf.Rad2Deg));
@@ -39,12 +31,6 @@ namespace XX006
         /// </summary>
         public void DoIdle()
         {
-            //Player p = GameManager.Instance.Stage.MainPlayer;
-            //if (p != null)
-            //{
-            //    p.TryIdle();
-            //    //Log.Info("DoIdle");
-            //}
             m_Target?.TryIdle();
         }
 

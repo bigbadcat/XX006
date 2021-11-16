@@ -31,13 +31,13 @@ namespace XX006.UI
             Vector3 wv = this.GetComponentInParent<Canvas>().worldCamera.ScreenToWorldPoint(pdata.position);
             Vector3 v = transform.InverseTransformPoint(wv);
             v.z = 0;            
-            if (v.sqrMagnitude > 40000)     //按下点距离不得超过中心点200的距离
+            if (v.sqrMagnitude > MAX_MOVE_DISTANCE * MAX_MOVE_DISTANCE)
             {
                 return;
             }
             //Log.Info("Down:{0}", v);
             m_TouchControl = true;
-            Wheel.anchoredPosition = v;
+            //Wheel.anchoredPosition = v;
             Rocker.anchoredPosition = v;
             Rocker.gameObject.SetActive(true);
         }
@@ -95,7 +95,7 @@ namespace XX006.UI
         /// <summary>
         /// 最大移动距离，虚拟摇杆最多离开原点的距离。
         /// </summary>
-        public const float MAX_MOVE_DISTANCE = 150;
+        public const float MAX_MOVE_DISTANCE = 200;
 
         /// <summary>
         /// 摇杆背景图片。

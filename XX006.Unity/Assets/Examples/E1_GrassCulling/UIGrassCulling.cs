@@ -28,7 +28,7 @@ public class UIGrassCulling : MonoBehaviour
         TiTle.text = string.Format("SupportsComputeShaders:{0}", SystemInfo.supportsComputeShaders);
         ViewCamera.localRotation = Quaternion.Euler(0, ViewSlider.value * 360, 0);
 
-        RawImg.texture = GrassChunk.HizDepthTexture;
+        RawImg.texture = HizManager.Instance.DepthTexture;
     }
 
     public void OnViewSliderChange(float t)
