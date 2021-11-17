@@ -25,7 +25,7 @@ namespace XX006
 
         public void ChangePitch(float delta)
         {
-            m_Latitude = Mathf.Clamp(m_Latitude + delta, 10, 80);
+            m_Latitude = Mathf.Clamp(m_Latitude + delta, 20, 80);
         }
 
         public void ChangeZoom(float delta)
@@ -75,7 +75,7 @@ namespace XX006
         /// <summary>
         /// 纬度。
         /// </summary>
-        [Range(10, 80)]
+        [Range(20, 80)]
         [SerializeField]
         private float m_Latitude = 50;
 

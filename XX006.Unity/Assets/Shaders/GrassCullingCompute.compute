@@ -161,7 +161,7 @@ void CSMain (uint3 id : SV_DispatchThreadID)
     float3 pos = trs._14_24_34;        //_14_24_34 = position
     //float3 pos = data.trs._14_24_34;        //_14_24_34 = position
     float2 noise_uv = (-_WindDir.xz * _Wind + pos.xz) / _WindGap;       //UV move in the opposite direction
-    float rate = Tex2DWrap(_WindNoise, uint2(256, 256), noise_uv).r * 1;
+    float rate = Tex2DWrap(_WindNoise, uint2(256, 256), noise_uv).r;
 
     instancing_data data;
     data.trs = trs;

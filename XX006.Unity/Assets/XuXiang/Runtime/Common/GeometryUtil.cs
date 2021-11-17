@@ -134,5 +134,25 @@ namespace XuXiang
             points[7] = new Vector4(boundMin.x, boundMin.y, boundMax.z, 1);
             return points;
         }
+
+        /// <summary>
+        /// 获取边框的8个点。
+        /// </summary>
+        /// <param name="boundMin">边框最小位置。</param>
+        /// <param name="boundMax">边框最大位置。</param>
+        /// <param name="points">保存边框八个点的数组。</param>
+        /// <returns>保存边框八个点的数组。/returns>
+        public static Vector4[] GetBoundPointsForAABB(Vector3 boundMin, Vector3 boundMax, Vector4[] points)
+        {
+            points[0] = new Vector4(boundMin.x, boundMin.y, boundMin.z, 1);
+            points[1] = new Vector4(boundMax.x, boundMax.y, boundMax.z, 1);
+            points[2] = new Vector4(boundMax.x, boundMax.y, boundMin.z, 1);
+            points[3] = new Vector4(boundMax.x, boundMin.y, boundMax.z, 1);
+            points[4] = new Vector4(boundMax.x, boundMin.y, boundMin.z, 1);
+            points[5] = new Vector4(boundMin.x, boundMax.y, boundMax.z, 1);
+            points[6] = new Vector4(boundMin.x, boundMax.y, boundMin.z, 1);
+            points[7] = new Vector4(boundMin.x, boundMin.y, boundMax.z, 1);
+            return points;
+        }
     }
 }

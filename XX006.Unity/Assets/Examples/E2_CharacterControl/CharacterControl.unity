@@ -1535,6 +1535,7 @@ MonoBehaviour:
   AreaY: 100
   GapX: 0.25
   GapZ: 0.25
+  SplitChunk: 8
   WindGap: 32
   WindSpeed: 8
   WindDir: {x: 0.5, y: 0, z: 0.5}

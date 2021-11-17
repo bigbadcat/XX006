@@ -18,6 +18,9 @@ public class GetGrassHeight : MonoBehaviour
     [Range(0.1f, 10)]
     public float GapZ = 1;
 
+    [Range(1, 10)]
+    public int SplitChunk = 4;
+
     [Range(1, 64)]
     public float WindGap = 32;
 
@@ -77,13 +80,12 @@ public class GetGrassHeight : MonoBehaviour
         float max_h = 0;
 
         Dictionary<int, List<Matrix4x4>> id_chunk = new Dictionary<int, List<Matrix4x4>>();
-        int ch_split = 6;
         for (int i=0; i< row; ++i)
         {
-            int ia = Mathf.Min(i * ch_split / row, ch_split-1);
+            int ia = Mathf.Min(i * SplitChunk / row, SplitChunk - 1);
             for (int j=0; j< col; ++j)
             {
-                int ja = Mathf.Min(j * ch_split / col, ch_split-1);
+                int ja = Mathf.Min(j * SplitChunk / col, SplitChunk - 1);
                 float x = i * GapX + Random.Range(0, GapX / 2);
                 float z = j * GapZ + Random.Range(0, GapZ / 2);
                 float h = td.GetInterpolatedHeight(x / 100, z / 100);
@@ -124,7 +126,7 @@ public class GetGrassHeight : MonoBehaviour
                 }                
             }
         }
-        //PVE收入 1700W+5800W+2800W+3400W=13700W
+
         Log.Info("GrassCount:{0} minh:{1} maxh:{2} chunk:{3}-{4}", n, min_h, max_h, id_chunk.Count, n/id_chunk.Count);
         GrassMat.SetVector("_Move", new Vector4(WindDir.x, WindDir.y, WindDir.z, 0));
         foreach (var kvp in id_chunk)

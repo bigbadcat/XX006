@@ -84,7 +84,7 @@ namespace XX006
         public static Vector4[] s_RolePositions = new Vector4[8];
 
         private static ComputeShader s_ViewFrustumCulling;
-        private static int s_Kernel = 0;
+        public static int s_Kernel = 0;
 
         public static int s_PID_CameraPlanes = 0;
         public static int s_PID_CameraVPMatrix = 0;
@@ -96,54 +96,54 @@ namespace XX006
         public static int s_PID_WindNoise = 0;
         public static int s_PID_InstanceCount = 0;
 
-        private static Texture s_WindNoise = null;
+        public static Texture s_WindNoise = null;
 
         public void AddGrass(List<Matrix4x4> trs_list)
         {
-            //m_Datas.AddRange(trs_list);
+            if (trs_list.Count <= 0)
+            {
+                return;
+            }
+            if (m_Datas.Count == 0)
+            {
+                Matrix4x4 trs = trs_list[0];
+                m_MinPos = m_MaxPos = new Vector3(trs.m03, trs.m13, trs.m23);
+            }
+            m_Datas.AddRange(trs_list);
             foreach (var trs in trs_list)
             {
-                m_Datas.Add(trs);
                 Vector3 p = new Vector3(trs.m03, trs.m13, trs.m23);
-                if (m_Datas.Count == 1)
-                {
-                    m_MinPos = p;
-                    m_MaxPos = p;
-                }
-                else
-                {
-                    m_MinPos.x = Mathf.Min(m_MinPos.x, p.x);
-                    m_MinPos.y = Mathf.Min(m_MinPos.y, p.y);
-                    m_MinPos.z = Mathf.Min(m_MinPos.z, p.z);
-
-                    m_MaxPos.x = Mathf.Max(m_MaxPos.x, p.x);
-                    m_MaxPos.y = Mathf.Max(m_MaxPos.y, p.y);
-                    m_MaxPos.z = Mathf.Max(m_MaxPos.z, p.z);
-                }
-            }
-        }
-
-        public void AddGrass(Vector3 pos, Matrix4x4 trs)
-        {
-            m_Datas.Add(trs);
-
-            Vector3 p = new Vector3(trs.m03, trs.m13, trs.m23);
-            if (m_Datas.Count == 1)
-            {
-                m_MinPos = pos;
-                m_MaxPos = pos;
-            }
-            else
-            {
                 m_MinPos.x = Mathf.Min(m_MinPos.x, p.x);
                 m_MinPos.y = Mathf.Min(m_MinPos.y, p.y);
                 m_MinPos.z = Mathf.Min(m_MinPos.z, p.z);
-
                 m_MaxPos.x = Mathf.Max(m_MaxPos.x, p.x);
                 m_MaxPos.y = Mathf.Max(m_MaxPos.y, p.y);
                 m_MaxPos.z = Mathf.Max(m_MaxPos.z, p.z);
             }
+            GeometryUtil.GetBoundPointsForAABB(m_MinPos, m_MaxPos, m_BoundPoints);
         }
+
+        //public void AddGrass(Vector3 pos, Matrix4x4 trs)
+        //{
+        //    m_Datas.Add(trs);
+
+        //    Vector3 p = new Vector3(trs.m03, trs.m13, trs.m23);
+        //    if (m_Datas.Count == 1)
+        //    {
+        //        m_MinPos = pos;
+        //        m_MaxPos = pos;
+        //    }
+        //    else
+        //    {
+        //        m_MinPos.x = Mathf.Min(m_MinPos.x, p.x);
+        //        m_MinPos.y = Mathf.Min(m_MinPos.y, p.y);
+        //        m_MinPos.z = Mathf.Min(m_MinPos.z, p.z);
+
+        //        m_MaxPos.x = Mathf.Max(m_MaxPos.x, p.x);
+        //        m_MaxPos.y = Mathf.Max(m_MaxPos.y, p.y);
+        //        m_MaxPos.z = Mathf.Max(m_MaxPos.z, p.z);
+        //    }
+        //}
 
         public Material GrassMat
         {
@@ -161,8 +161,20 @@ namespace XX006
             get { return m_MaxPos; }
         }
 
-        private static Vector4[] s_CachePlanes = new Vector4[6];
-        private static Vector4[] s_BoundPoints = new Vector4[8];
+        public Vector3 Center
+        {
+            get { return (m_MinPos + m_MaxPos)/ 2; }
+        }
+
+        public Vector3 Size
+        {
+            get { return m_MaxPos - m_MinPos; }
+        }
+
+        public Vector4[] BoundPoints
+        {
+            get { return m_BoundPoints; }
+        }
 
         public void DrawGrass(float wind, float gap, Vector3 dir, Mesh mesh, int submeshIndex, Camera camera)
         {
@@ -172,26 +184,6 @@ namespace XX006
             }
             if (m_CurCount > 0 && s_ViewFrustumCulling != null)
             {
-                //设置剔除参数                
-                //ViewFrustumCulling.SetVectorArray(s_PID_CameraPlanes, GeometryUtil.GetFrustumPlane(Camera.main, s_CachePlanes));
-                ViewFrustumCulling.SetVectorArray(s_PID_BoundPoints, GeometryUtil.GetBoundPoints(m_BoundCenter, m_BoundSize, s_BoundPoints));
-                //ViewFrustumCulling.SetTexture(s_Kernel, s_PID_HizDepthTexture, HizManager.Instance.DepthTexture);
-
-                //设置风的参数
-                float fm = Mathf.Sqrt(dir.x * dir.x + dir.y * dir.y + dir.z * dir.z);
-                Vector4 wdir = new Vector4(dir.x, dir.y, dir.z, fm);
-                ViewFrustumCulling.SetFloat(s_PID_Wind, wind);
-                ViewFrustumCulling.SetFloat(s_PID_WindGap, gap);
-                ViewFrustumCulling.SetVector(s_PID_WindDir, wdir);
-                ViewFrustumCulling.SetTexture(s_Kernel, s_PID_WindNoise, s_WindNoise);
-                for (int i = 0; i < s_RoleTargetCount; ++i)
-                {
-                    Vector3 p = s_RoleTargets[i].position;
-                    s_RolePositions[i] = new Vector4(p.x, p.y, p.z, 1);
-                }
-                ViewFrustumCulling.SetInt("_RoleCount", s_RoleTargetCount);
-                ViewFrustumCulling.SetVectorArray("_RoleInfos", s_RolePositions);
-
                 //设置要准备绘制的实例参数
                 m_CullResult.SetCounterValue(0);
                 ViewFrustumCulling.SetInt(s_PID_InstanceCount, m_CurCount);
@@ -201,12 +193,10 @@ namespace XX006
 
                 ComputeBuffer.CopyCount(m_CullResult, m_ArgsBuffer, sizeof(uint));
                 m_GrassMat.SetBuffer("_InstancingBuffer", m_CullResult);
-
 #if UNITY_EDITOR
                 camera = null;
 #endif
                 Bounds bounds = new Bounds((m_MinPos + m_MaxPos) / 2, m_MaxPos - m_MinPos);
-                //Bounds bounds = new Bounds(Vector3.zero, new Vector3(1, 1, 1));
                 Graphics.DrawMeshInstancedIndirect(mesh, 0, m_GrassMat, bounds, m_ArgsBuffer, 0, null, UnityEngine.Rendering.ShadowCastingMode.On, true, 0, camera);
             }
         }
@@ -256,11 +246,12 @@ namespace XX006
         private uint[] m_Args = new uint[5] { 0, 0, 0, 0, 0 };
         private ComputeBuffer m_ArgsBuffer;
 
-        private Vector3 m_BoundCenter = new Vector3(0, 0.5f, 0);
-        private Vector3 m_BoundSize = new Vector3(1, 1, 0.2f);
+        //private Vector3 m_BoundCenter = new Vector3(0, 0.5f, 0);
+        //private Vector3 m_BoundSize = new Vector3(1, 1, 0.2f);
 
         private Vector3 m_MinPos = Vector3.zero;
         private Vector3 m_MaxPos = Vector3.zero;
+        private Vector4[] m_BoundPoints = new Vector4[8];
 
         private Material m_GrassMat;
     }

@@ -7,16 +7,21 @@ namespace XX006
 {
     public class GrassManager
     {
-        public void AddGrass(int id, Vector3 pos, Matrix4x4 trs)
+        public GrassManager()
         {
-            GrassChunk ck;
-            if (!m_GrassChunks.TryGetValue(id, out ck))
-            {
-                ck = new GrassChunk();
-                m_GrassChunks.Add(id, ck);
-            }
-            ck.AddGrass(pos, trs);
+            GeometryUtil.GetBoundPoints(m_BoundCenter, m_BoundSize, s_BoundPoints);
         }
+
+        //public void AddGrass(int id, Vector3 pos, Matrix4x4 trs)
+        //{
+        //    GrassChunk ck;
+        //    if (!m_GrassChunks.TryGetValue(id, out ck))
+        //    {
+        //        ck = new GrassChunk();
+        //        m_GrassChunks.Add(id, ck);
+        //    }
+        //    ck.AddGrass(pos, trs);
+        //}
 
         public GrassChunk GetOrCreateChunk(int id)
         {
@@ -45,9 +50,55 @@ namespace XX006
         {
             Matrix4x4 vp = GL.GetGPUProjectionMatrix(camera.projectionMatrix, false) * camera.worldToCameraMatrix;      //VP矩阵
             GrassChunk.ViewFrustumCulling.SetMatrix(GrassChunk.s_PID_CameraVPMatrix, vp);
+            GrassChunk.ViewFrustumCulling.SetVectorArray(GrassChunk.s_PID_BoundPoints, s_BoundPoints);
+
+            //设置风的参数
+            float fm = Mathf.Sqrt(dir.x * dir.x + dir.y * dir.y + dir.z * dir.z);
+            Vector4 wdir = new Vector4(dir.x, dir.y, dir.z, fm);
+            GrassChunk.ViewFrustumCulling.SetFloat(GrassChunk.s_PID_Wind, wind);
+            GrassChunk.ViewFrustumCulling.SetFloat(GrassChunk.s_PID_WindGap, gap);
+            GrassChunk.ViewFrustumCulling.SetVector(GrassChunk.s_PID_WindDir, wdir);
+            GrassChunk.ViewFrustumCulling.SetTexture(GrassChunk.s_Kernel, GrassChunk.s_PID_WindNoise, GrassChunk.s_WindNoise);
+            for (int i = 0; i < GrassChunk.s_RoleTargetCount; ++i)
+            {
+                Vector3 p = GrassChunk.s_RoleTargets[i].position;
+                GrassChunk.s_RolePositions[i] = new Vector4(p.x, p.y, p.z, 1);
+            }
+            GrassChunk.ViewFrustumCulling.SetInt("_RoleCount", GrassChunk.s_RoleTargetCount);
+            GrassChunk.ViewFrustumCulling.SetVectorArray("_RoleInfos", GrassChunk.s_RolePositions);
+
+            GeometryUtil.GetFrustumPlane(camera, s_CachePlanes);
             foreach (var kvp in m_GrassChunks)
             {
-                kvp.Value.DrawGrass(wind, gap, dir, mesh, submeshIndex, camera);
+                //GrassChunk chunk = kvp.Value;
+                //GeometryUtil.GetBoundPointsForAABB(chunk.MinPos, chunk.MaxPos, s_BoundPoints);
+
+                bool show = true;
+                var bound_points = kvp.Value.BoundPoints;
+                for (int i = 0; i < s_CachePlanes.Length && show; ++i)
+                {
+                    int out_count = 0;
+                    for (int j = 0; j < bound_points.Length; ++j)
+                    {
+                        if (GeometryUtil.IsOutsideThePlane(s_CachePlanes[i], bound_points[j]))
+                        {
+                            ++out_count;
+                        }
+                        else
+                        {
+                            break;
+                        }
+                    }
+                    if (out_count == bound_points.Length)
+                    {
+                        show = false;
+                    }
+                }
+
+                if (show)
+                {
+                    kvp.Value.DrawGrass(wind, gap, dir, mesh, submeshIndex, camera);
+                }                
             }
         }
 
@@ -60,6 +111,12 @@ namespace XX006
             m_GrassChunks.Clear();
         }
 
+        private static Vector4[] s_CachePlanes = new Vector4[6];
+        private static Vector4[] s_BoundPoints = new Vector4[8];
+
         private Dictionary<int, GrassChunk> m_GrassChunks = new Dictionary<int, GrassChunk>();
+
+        private Vector3 m_BoundCenter = new Vector3(0, 0.5f, 0);
+        private Vector3 m_BoundSize = new Vector3(1, 1, 0.2f);
     }
 }
