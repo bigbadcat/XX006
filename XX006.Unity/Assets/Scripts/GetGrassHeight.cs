@@ -18,7 +18,7 @@ public class GetGrassHeight : MonoBehaviour
     [Range(0.1f, 10)]
     public float GapZ = 1;
 
-    [Range(1, 10)]
+    [Range(1, 40)]
     public int SplitChunk = 4;
 
     [Range(1, 64)]
@@ -94,14 +94,10 @@ public class GetGrassHeight : MonoBehaviour
                 if ((mypos-pos).sqrMagnitude < Distance * Distance)
                 {
                     Quaternion q = Quaternion.Euler(0, Random.Range(-90, 90), 0);
-                    //float rs = Random.Range(0.4f, 0.8f);
-                    //float ry = rs * Random.Range(0.5f, 1.2f);
-                    float rs = Random.Range(0.1f, 0.15f);
+                    float rx = Random.Range(0.1f, 0.15f);
                     float ry = (float)System.Math.Sqrt((-2) * System.Math.Log(Random.Range(0, 1.0f), System.Math.E)) / 5;       //高度按标准正态分布随机
-                    ry = 0.25f + ry * 0.75f;
-                    ry = ry * 2.0f;
-                    Matrix4x4 trs = Matrix4x4.TRS(pos, q, new Vector3(rs, ry, 1));
-                    //m_GrassManager.AddGrass(0, pos, Matrix4x4.TRS(pos, q, new Vector3(rs, ry, 1)));
+                    ry = 0.5f + ry * 1.5f;
+                    Matrix4x4 trs = Matrix4x4.TRS(pos, q, new Vector3(rx, ry, 1));
                     ++n;
 
                     if (n == 1)

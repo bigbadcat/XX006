@@ -24,7 +24,6 @@ uint _RoleCount;
 float4 _RoleInfos[8];
 
 uint _InstanceCount;
-//StructuredBuffer<instancing_data> _InstancingBuffer;
 StructuredBuffer<float4x4> _InstancingBuffer;
 AppendStructuredBuffer<instancing_data> _CullResult;
 
@@ -32,7 +31,7 @@ inline bool IsInClipSpace(float4 clip_pos)
 {
     return clip_pos.x > -clip_pos.w && clip_pos.x < clip_pos.w
     && clip_pos.y > -clip_pos.w && clip_pos.y < clip_pos.w
-    && clip_pos.z > 0 && clip_pos.z < clip_pos.w;
+    && clip_pos.z > 0.5 && clip_pos.z < clip_pos.w;
 }
 
 bool IsCulling(float4x4 trs)
@@ -106,6 +105,16 @@ fixed4 Tex2DWrap(Texture2D tex, uint2 size, float2 uv)
     return lerp(c_01, c_23, f.y);
 }
 
+float4 GetWind(float3 pos)
+{
+    float4 wind = float4(0, 0, 0, 0);
+    float2 noise_uv = (-_WindDir.xz * _Wind + pos.xz) / _WindGap;       //UV move in the opposite direction
+    float rate = Tex2DWrap(_WindNoise, uint2(256, 256), noise_uv).r;
+    wind.xyz = normalize(_WindDir.xyz + _WindDir.zyx * (rate - 0.5));         //swing
+    wind.w = rate;
+    return wind;
+}
+
 float4 GetBend(float3 pos)
 {
     float4 bend_dir = float4(0, 0, 0, 0);
@@ -113,8 +122,8 @@ float4 GetBend(float3 pos)
     {
         float4 ri = _RoleInfos[i];
         float3 dir = pos - ri.xyz;
-        float bend_max = 1 * ri.w;
-        float bend_min = 0.3 * ri.w;
+        float bend_max = 1.0 * ri.w;
+        float bend_min = 0.5 * ri.w;
         float bend_dis_2 = dot(dir,dir);
         if (bend_dis_2 < bend_max * bend_max)
         {
@@ -159,20 +168,17 @@ void CSMain (uint3 id : SV_DispatchThreadID)
 
     //compute wind
     float3 pos = trs._14_24_34;        //_14_24_34 = position
-    //float3 pos = data.trs._14_24_34;        //_14_24_34 = position
-    float2 noise_uv = (-_WindDir.xz * _Wind + pos.xz) / _WindGap;       //UV move in the opposite direction
-    float rate = Tex2DWrap(_WindNoise, uint2(256, 256), noise_uv).r;
-
     instancing_data data;
     data.trs = trs;
-    data.wind.xyz = _WindDir.xyz + _WindDir.zyx * (rate - 0.5);         //swing
-    data.wind.w = rate;
+    data.wind = GetWind(pos);
+    data.bend = GetBend(pos);;
 
-    //compute bend
-    float4 bend = GetBend(pos);
-    data.bend = bend;
-    data.bend.w *= 1 - rate * 0.5;
-    data.wind.w *= 1 - bend.w * 0.5;
-
+    float all = data.wind.w + data.bend.w;
+    if (all > 0)
+    {
+        data.bend.w *= data.bend.w / all;
+        data.wind.w *= data.wind.w / all;
+    }
+    
     _CullResult.Append(data);
 }

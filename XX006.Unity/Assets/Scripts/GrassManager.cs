@@ -70,9 +70,6 @@ namespace XX006
             GeometryUtil.GetFrustumPlane(camera, s_CachePlanes);
             foreach (var kvp in m_GrassChunks)
             {
-                //GrassChunk chunk = kvp.Value;
-                //GeometryUtil.GetBoundPointsForAABB(chunk.MinPos, chunk.MaxPos, s_BoundPoints);
-
                 bool show = true;
                 var bound_points = kvp.Value.BoundPoints;
                 for (int i = 0; i < s_CachePlanes.Length && show; ++i)
