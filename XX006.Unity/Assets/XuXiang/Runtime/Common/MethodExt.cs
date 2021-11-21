@@ -397,6 +397,17 @@ namespace XuXiang
             long m = k / 1024;
             return string.Format("{0}MB", m);
         }
+
+        /// <summary>
+        /// 将Vector3转化为Vector4.
+        /// </summary>
+        /// <param name="v">Vector3值。</param>
+        /// <param name="w">w分量值，默认为0.</param>
+        /// <returns>Vector4值。</returns>
+        public static Vector4 ToVector4(this Vector3 v, float w = 0)
+        {
+            return new Vector4(v.x, v.y, v.z, w);
+        }
     }
 }
 

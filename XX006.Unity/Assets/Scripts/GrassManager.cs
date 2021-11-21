@@ -12,17 +12,6 @@ namespace XX006
             GeometryUtil.GetBoundPoints(m_BoundCenter, m_BoundSize, s_BoundPoints);
         }
 
-        //public void AddGrass(int id, Vector3 pos, Matrix4x4 trs)
-        //{
-        //    GrassChunk ck;
-        //    if (!m_GrassChunks.TryGetValue(id, out ck))
-        //    {
-        //        ck = new GrassChunk();
-        //        m_GrassChunks.Add(id, ck);
-        //    }
-        //    ck.AddGrass(pos, trs);
-        //}
-
         public GrassChunk GetOrCreateChunk(int id)
         {
             GrassChunk ck;
@@ -59,12 +48,12 @@ namespace XX006
             GrassChunk.ViewFrustumCulling.SetFloat(GrassChunk.s_PID_WindGap, gap);
             GrassChunk.ViewFrustumCulling.SetVector(GrassChunk.s_PID_WindDir, wdir);
             GrassChunk.ViewFrustumCulling.SetTexture(GrassChunk.s_Kernel, GrassChunk.s_PID_WindNoise, GrassChunk.s_WindNoise);
-            for (int i = 0; i < GrassChunk.s_RoleTargetCount; ++i)
+            var bend_areas = BendArea.CurAreas;
+            for (int i = 0; i < bend_areas.Count; ++i)
             {
-                Vector3 p = GrassChunk.s_RoleTargets[i].position;
-                GrassChunk.s_RolePositions[i] = new Vector4(p.x, p.y, p.z, 1);
+                GrassChunk.s_RolePositions[i] = bend_areas[i].Info;
             }
-            GrassChunk.ViewFrustumCulling.SetInt("_RoleCount", GrassChunk.s_RoleTargetCount);
+            GrassChunk.ViewFrustumCulling.SetInt("_RoleCount", bend_areas.Count);
             GrassChunk.ViewFrustumCulling.SetVectorArray("_RoleInfos", GrassChunk.s_RolePositions);
 
             GeometryUtil.GetFrustumPlane(camera, s_CachePlanes);

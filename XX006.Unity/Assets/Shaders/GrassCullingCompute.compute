@@ -20,8 +20,11 @@ float _WindGap;
 float4 _WindDir;        //w=sqrt(AA+BB+CC)
 Texture2D _WindNoise;
 
+
 uint _RoleCount;
 float4 _RoleInfos[8];
+float _BendDelta;
+RWStructuredBuffer<float4> _BendBuffer;
 
 uint _InstanceCount;
 StructuredBuffer<float4x4> _InstancingBuffer;
@@ -128,12 +131,14 @@ float4 GetBend(float3 pos)
         if (bend_dis_2 < bend_max * bend_max)
         {
             float br = 1 - smoothstep(bend_min, bend_max, sqrt(bend_dis_2));
-            bend_dir.xyz += normalize(dir) * br;
+            bend_dir.xz += normalize(dir.xz) * br;
             bend_dir.w = max(bend_dir.w, br);
         }
     }
     if (bend_dir.w > 0)
     {
+        bend_dir.xz = normalize(bend_dir.xz);
+        bend_dir.y = -0.4;
         bend_dir.xyz = normalize(bend_dir.xyz);
     }    
     return bend_dir;
@@ -147,14 +152,15 @@ void CSMain (uint3 id : SV_DispatchThreadID)
         return;
     }
 
-    //instancing_data data = _InstancingBuffer[id.x];
     float4x4 trs = _InstancingBuffer[id.x];
     //if (IsCulling(trs))
     //{
     //    return;
     //}
 
+    //only view frushtum culling for mobile is faster
     bool in_clip = false;
+    float4 bend = _BendBuffer[id.x];
     float4x4 mvpMatrix = mul(_CameraVPMatrix, trs);
     for (int i = 0; i < 8 && !in_clip; i++)
     {
@@ -163,22 +169,32 @@ void CSMain (uint3 id : SV_DispatchThreadID)
     }
     if (!in_clip)
     {
+        bend.w = max(0, bend.w - _BendDelta);
+        _BendBuffer[id.x] = bend;
         return;
     }
 
     //compute wind
     float3 pos = trs._14_24_34;        //_14_24_34 = position
-    instancing_data data;
-    data.trs = trs;
-    data.wind = GetWind(pos);
-    data.bend = GetBend(pos);;
+    float4 wind = GetWind(pos);
+    float4 new_bend = GetBend(pos);
+    if (new_bend.w < bend.w)
+    {
+        bend.w = max(0, bend.w - _BendDelta);
+        new_bend = bend;
+    }
+    _BendBuffer[id.x] = new_bend;
 
-    float all = data.wind.w + data.bend.w;
+    float all = wind.w + new_bend.w;
     if (all > 0)
     {
-        data.bend.w *= data.bend.w / all;
-        data.wind.w *= data.wind.w / all;
+        wind.w *= wind.w / all;
+        new_bend.w *= new_bend.w / all;
     }
     
+    instancing_data data;
+    data.trs = trs;
+    data.wind = wind;
+    data.bend = new_bend;
     _CullResult.Append(data);
 }

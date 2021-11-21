@@ -33,7 +33,7 @@ namespace XX006
         Middle = 2,
 
         /// <summary>
-        /// 高中草。(会与风飘动，会产生阴影，会与角色交互)
+        /// 高草。(会与风飘动，会产生阴影，会与角色交互)
         /// </summary>
         Height = 3,
     }
@@ -112,38 +112,17 @@ namespace XX006
             m_Datas.AddRange(trs_list);
             foreach (var trs in trs_list)
             {
+                //用草的位置预留2的边框，精确的做法是计算草的AABB
                 Vector3 p = new Vector3(trs.m03, trs.m13, trs.m23);
-                m_MinPos.x = Mathf.Min(m_MinPos.x, p.x);
-                m_MinPos.y = Mathf.Min(m_MinPos.y, p.y);
-                m_MinPos.z = Mathf.Min(m_MinPos.z, p.z);
-                m_MaxPos.x = Mathf.Max(m_MaxPos.x, p.x);
-                m_MaxPos.y = Mathf.Max(m_MaxPos.y, p.y);
-                m_MaxPos.z = Mathf.Max(m_MaxPos.z, p.z);
+                m_MinPos.x = Mathf.Min(m_MinPos.x, p.x - 2);
+                m_MinPos.y = Mathf.Min(m_MinPos.y, p.y - 2);
+                m_MinPos.z = Mathf.Min(m_MinPos.z, p.z - 2);
+                m_MaxPos.x = Mathf.Max(m_MaxPos.x, p.x + 2);
+                m_MaxPos.y = Mathf.Max(m_MaxPos.y, p.y + 2);
+                m_MaxPos.z = Mathf.Max(m_MaxPos.z, p.z + 2);
             }
             GeometryUtil.GetBoundPointsForAABB(m_MinPos, m_MaxPos, m_BoundPoints);
         }
-
-        //public void AddGrass(Vector3 pos, Matrix4x4 trs)
-        //{
-        //    m_Datas.Add(trs);
-
-        //    Vector3 p = new Vector3(trs.m03, trs.m13, trs.m23);
-        //    if (m_Datas.Count == 1)
-        //    {
-        //        m_MinPos = pos;
-        //        m_MaxPos = pos;
-        //    }
-        //    else
-        //    {
-        //        m_MinPos.x = Mathf.Min(m_MinPos.x, p.x);
-        //        m_MinPos.y = Mathf.Min(m_MinPos.y, p.y);
-        //        m_MinPos.z = Mathf.Min(m_MinPos.z, p.z);
-
-        //        m_MaxPos.x = Mathf.Max(m_MaxPos.x, p.x);
-        //        m_MaxPos.y = Mathf.Max(m_MaxPos.y, p.y);
-        //        m_MaxPos.z = Mathf.Max(m_MaxPos.z, p.z);
-        //    }
-        //}
 
         public Material GrassMat
         {
@@ -188,6 +167,8 @@ namespace XX006
                 m_CullResult.SetCounterValue(0);
                 ViewFrustumCulling.SetInt(s_PID_InstanceCount, m_CurCount);
                 ViewFrustumCulling.SetBuffer(s_Kernel, "_InstancingBuffer", m_LocalToWorldMatrixBuffer);
+                ViewFrustumCulling.SetFloat("_BendDelta", Time.deltaTime / 2);
+                ViewFrustumCulling.SetBuffer(s_Kernel, "_BendBuffer", m_BendBuffer);
                 ViewFrustumCulling.SetBuffer(s_Kernel, "_CullResult", m_CullResult);
                 ViewFrustumCulling.Dispatch(s_Kernel, (int)Mathf.Ceil(m_CurCount / 512.0f), 1, 1);
 
@@ -205,6 +186,8 @@ namespace XX006
         {
             m_LocalToWorldMatrixBuffer?.Release();
             m_LocalToWorldMatrixBuffer = null;
+            m_BendBuffer?.Release();
+            m_BendBuffer = null;
             m_CullResult?.Release();
             m_CullResult = null;
             m_ArgsBuffer?.Release();
@@ -218,12 +201,19 @@ namespace XX006
         {
             m_LocalToWorldMatrixBuffer?.Release();
             m_LocalToWorldMatrixBuffer = null;
+            m_BendBuffer?.Release();
+            m_BendBuffer = null;
             m_CullResult?.Release();
             m_CullResult = null;
 
             m_CurCount = m_Datas.Count;
             m_LocalToWorldMatrixBuffer = new ComputeBuffer(m_CurCount, sizeof(float) * 16);
             m_LocalToWorldMatrixBuffer.SetData(m_Datas);
+
+            Vector4[] bend_buff = new Vector4[m_CurCount];
+            m_BendBuffer = new ComputeBuffer(m_CurCount, sizeof(float) * 4);
+            m_BendBuffer.SetData(bend_buff);
+
             m_CullResult = new ComputeBuffer(m_CurCount, sizeof(float) * (16 + 8), ComputeBufferType.Append);
 
             if (m_ArgsBuffer == null)
@@ -238,16 +228,13 @@ namespace XX006
         }
 
 
-        //private List<GrassData> m_Datas = new List<GrassData>();
         private List<Matrix4x4> m_Datas = new List<Matrix4x4>();
         private int m_CurCount = 0;
         private ComputeBuffer m_LocalToWorldMatrixBuffer;
+        private ComputeBuffer m_BendBuffer;
         private ComputeBuffer m_CullResult;
         private uint[] m_Args = new uint[5] { 0, 0, 0, 0, 0 };
         private ComputeBuffer m_ArgsBuffer;
-
-        //private Vector3 m_BoundCenter = new Vector3(0, 0.5f, 0);
-        //private Vector3 m_BoundSize = new Vector3(1, 1, 0.2f);
 
         private Vector3 m_MinPos = Vector3.zero;
         private Vector3 m_MaxPos = Vector3.zero;

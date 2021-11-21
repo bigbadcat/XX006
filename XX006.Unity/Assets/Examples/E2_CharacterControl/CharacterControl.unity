@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 170076734}
-  m_IndirectSpecularColor: {r: 0.4482453, g: 0.49827206, b: 0.5755818, a: 1}
+  m_IndirectSpecularColor: {r: 0.4482447, g: 0.49827182, b: 0.5755813, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -294,6 +294,7 @@ GameObject:
   m_Component:
   - component: {fileID: 306546862}
   - component: {fileID: 306546863}
+  - component: {fileID: 306546864}
   m_Layer: 0
   m_Name: Role
   m_TagString: Untagged
@@ -329,6 +330,19 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_MoveSpeed: 3.2
+--- !u!114 &306546864
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 306546861}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 27820fd36074a2d4ca3a3e80f8182bef, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Range: 1
 --- !u!1001 &487692543
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -1024,6 +1038,25 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 8cd265b00adedeb47b8af54d890d7b5e, type: 3}
+--- !u!1 &1225904441 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 1672537138573532, guid: 8cd265b00adedeb47b8af54d890d7b5e,
+    type: 3}
+  m_PrefabInstance: {fileID: 1225904440}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &1225904442
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1225904441}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 27820fd36074a2d4ca3a3e80f8182bef, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Range: 1
 --- !u!1001 &1320243120
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -1085,6 +1118,25 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 8cd265b00adedeb47b8af54d890d7b5e, type: 3}
+--- !u!1 &1320243121 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 1672537138573532, guid: 8cd265b00adedeb47b8af54d890d7b5e,
+    type: 3}
+  m_PrefabInstance: {fileID: 1320243120}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &1320243122
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1320243121}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 27820fd36074a2d4ca3a3e80f8182bef, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Range: 1
 --- !u!1 &1354917880
 GameObject:
   m_ObjectHideFlags: 0
@@ -1727,11 +1779,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   AreaX: 100
   AreaY: 100
-  GapX: 0.3
-  GapZ: 0.3
+  GapX: 0.25
+  GapZ: 0.25
   SplitChunk: 8
   WindGap: 32
-  WindSpeed: 8
+  WindSpeed: 5
   WindDir: {x: 0.5, y: 0, z: 0.5}
   WindNoise: {fileID: 2800000, guid: 84a6a9d7716c4d54f983f7b5fa293ec9, type: 3}
   RoleTargets:
