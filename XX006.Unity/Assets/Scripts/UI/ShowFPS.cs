@@ -1,40 +1,38 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using XuXiang;
 
 namespace XX006.UI
 {
+    /// <summary>
+    /// æ˜¾ç¤ºFPSã€‚
+    /// </summary>
     public class ShowFPS : MonoBehaviour
     {
         // Start is called before the first frame update
         void Start()
         {
-            m_DT6 = m_DT5 = m_DT4 = m_DT3 = m_DT2 = m_DT1 = m_CurDT = 166;
-            m_FPS = 60;
-            DTValue.text = (m_CurDT / 10.0f).ToString();
-            FPSValue.text = m_FPS.ToString();
+            DTValue.text = (m_CurDT / 10).ToString();
+            FPSValue.text = m_CurFPS.ToString();
         }
 
         // Update is called once per frame
         void Update()
         {
-            float dt = Time.deltaTime;
-            m_DT6 = m_DT5;
-            m_DT5 = m_DT4;
-            m_DT4 = m_DT3;
-            m_DT3 = m_DT2;
-            m_DT2 = m_DT1;
-            m_DT1 = m_CurDT;
-            m_CurDT = (int)(dt * 1000 * 10);
-            if (m_DT1 != m_CurDT)
+            int dt = (int)(Time.deltaTime * 1000 * 10);
+            m_DTCount.Add(dt);
+            dt /= 10;
+            if (dt != m_CurDT)
             {
-                DTValue.text = (m_CurDT / 10.0f).ToString();
+                m_CurDT = dt;
+                DTValue.text = m_CurDT.ToString();
             }
-            int fps = (int)(70000.0f / (m_CurDT + m_DT1 + m_DT2 + m_DT3 + m_DT4 + m_DT5 + m_DT6) + 0.2f);  //0.8½ø1
-            if (m_FPS != fps)
+            int fps = (int)(10000.0f / m_DTCount.Average + 0.4f);
+            if (m_CurFPS != fps)
             {
-                m_FPS = fps;
-                FPSValue.text = m_FPS.ToString();
+                m_CurFPS = fps;
+                FPSValue.text = m_CurFPS.ToString();
             }
         }
 
@@ -42,12 +40,8 @@ namespace XX006.UI
         public TMPro.TextMeshProUGUI FPSValue;
 
         private int m_CurDT = 0;
-        private int m_DT1 = 0;
-        private int m_DT2 = 0;
-        private int m_DT3 = 0;
-        private int m_DT4 = 0;
-        private int m_DT5 = 0;
-        private int m_DT6 = 0;
-        private int m_FPS = 0;
+        private int m_CurFPS = 0;
+
+        private NumberCountInt m_DTCount = new NumberCountInt(30);
     }
 }
