@@ -166,12 +166,15 @@ namespace XX006.UI
             if (move)
             {
                 dir.y = 0;
-                if ((m_LastDirection - dir).sqrMagnitude > 0.0001f)
-                {
-                    ControllerCenter.Instance.DoMove(dir);
-                    m_LastMove = true;
-                    m_LastDirection = dir;
-                }                
+                //if ((m_LastDirection - dir).sqrMagnitude > 0.0001f)       //方向发生改变再通知，不适用于技能释放后继续保持移动
+                //{
+                //    ControllerCenter.Instance.DoMove(dir);
+                //    m_LastMove = true;
+                //    m_LastDirection = dir;
+                //}
+                ControllerCenter.Instance.DoMove(dir);
+                m_LastMove = true;
+                m_LastDirection = dir;
             }
             else if (m_LastMove)
             {
