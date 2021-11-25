@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using UnityEditor.Profiling.Memory.Experimental;
 using UnityEngine;
 
-namespace XX
+namespace XuXiang.EditorTools
 {
     /// <summary>
     /// 工具函数。

@@ -6,7 +6,7 @@ using UnityEditor.MemoryProfiler;
 using UnityEngine;
 using RawMemorySnapshot = UnityEditor.Profiling.Memory.Experimental.PackedMemorySnapshot;
 
-namespace XX
+namespace XuXiang.EditorTools
 {
     /// <summary>
     /// 内存快照对比结果。

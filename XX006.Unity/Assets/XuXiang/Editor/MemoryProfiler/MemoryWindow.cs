@@ -8,7 +8,7 @@ using UnityEngine;
 using UnityEngine.Profiling.Memory.Experimental;
 using RawMemorySnapshot = UnityEditor.Profiling.Memory.Experimental.PackedMemorySnapshot;
 
-namespace XX
+namespace XuXiang.EditorTools
 {
     public class MemoryWindow : EditorWindow
     {

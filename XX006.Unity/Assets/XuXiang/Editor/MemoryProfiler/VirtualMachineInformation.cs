@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEditor.MemoryProfiler;
 using UnityEngine;
 
-namespace XX
+namespace XuXiang.EditorTools
 {
     /// <summary>
     /// 有关提供内存快照的虚拟机的信息。

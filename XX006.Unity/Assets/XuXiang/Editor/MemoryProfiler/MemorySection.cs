@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using UnityEditor.MemoryProfiler;
 using UnityEngine;
 
-namespace XX
+namespace XuXiang.EditorTools
 {
     /// <summary>
     /// 一个内存扇区数据。

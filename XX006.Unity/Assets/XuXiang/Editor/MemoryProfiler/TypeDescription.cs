@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using UnityEditor.MemoryProfiler;
 using UnityEngine;
 
-namespace XX
+namespace XuXiang.EditorTools
 {
     /// <summary>
     /// 托管类型的字段的描述。

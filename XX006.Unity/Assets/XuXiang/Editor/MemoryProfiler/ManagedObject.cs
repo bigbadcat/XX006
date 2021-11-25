@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using UnityEditor.MemoryProfiler;
 using UnityEngine;
 
-namespace XX
+namespace XuXiang.EditorTools
 {
     /// <summary>
     /// 保存对象被引用的信息。
