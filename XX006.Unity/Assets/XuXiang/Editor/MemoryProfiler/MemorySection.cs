@@ -9,7 +9,7 @@ namespace XuXiang.EditorTools
     /// <summary>
     /// 一个内存扇区数据。
     /// </summary>
-    public class XXMemorySection
+    public class MemorySection
     {
         /// <summary>
         /// 排序比较。
@@ -17,7 +17,7 @@ namespace XuXiang.EditorTools
         /// <param name="a">扇区A。</param>
         /// <param name="b">扇区B。</param>
         /// <returns>起始地址比较结果。</returns>
-        public static int SortCompare(XXMemorySection a, XXMemorySection b)
+        public static int SortCompare(MemorySection a, MemorySection b)
         {
             //无符号数不能直接用减法比较
             return a.StartAddress < b.StartAddress ? -1 : (a.StartAddress == b.StartAddress ? 0 : 1);
@@ -27,7 +27,7 @@ namespace XuXiang.EditorTools
         /// 初始化。
         /// </summary>
         /// <param name="raw">原始数据。</param>
-        public void Init(MemorySection raw, int psize)
+        public void Init(UnityEditor.MemoryProfiler.MemorySection raw, int psize)
         {
             StartAddress = psize == 4 ? (raw.startAddress & 0xFFFFFFFF) : raw.startAddress;
             Bytes = raw.bytes;
@@ -53,7 +53,7 @@ namespace XuXiang.EditorTools
     /// <summary>
     /// 扇区查找类。
     /// </summary>
-    class XXManagedMemorySectionFinder : IComparer<XXMemorySection>
+    class ManagedMemorySectionFinder : IComparer<MemorySection>
     {
         /// <summary>
         /// 查找比较。
@@ -61,7 +61,7 @@ namespace XuXiang.EditorTools
         /// <param name="x">迭代比较元素。</param>
         /// <param name="y">无用，比较需要的参数封装在Finder中。</param>
         /// <returns>比较结果。</returns>
-        public int Compare(XXMemorySection x, XXMemorySection y)
+        public int Compare(MemorySection x, MemorySection y)
         {
             //无符号数不能直接用减法比较
             return x.EndAddress <= Address ? -1 : (x.StartAddress <= Address ? 0 : 1);
@@ -70,7 +70,7 @@ namespace XuXiang.EditorTools
         /// <summary>
         /// 缓存对象。
         /// </summary>
-        public static XXManagedMemorySectionFinder Cache = new XXManagedMemorySectionFinder();
+        public static ManagedMemorySectionFinder Cache = new ManagedMemorySectionFinder();
 
         /// <summary>
         /// 要查找的地址。
@@ -81,13 +81,13 @@ namespace XuXiang.EditorTools
     /// <summary>
     /// 内存扇区快照。
     /// </summary>
-    public class XXMemorySectionSnapshot
+    public class MemorySectionSnapshot
     {
         /// <summary>
         /// 初始化。
         /// </summary>
         /// <param name="entries">原始数据。</param>
-        public void Init(MemorySection[] raw, XXMemorySnapshot mem_snap)
+        public void Init(UnityEditor.MemoryProfiler.MemorySection[] raw, MemorySnapshot mem_snap)
         {
             //生成自己的数据
             int psize = mem_snap.VMInfo.PointerSize;
@@ -95,17 +95,17 @@ namespace XuXiang.EditorTools
             m_Sections.Capacity = raw.Length;
             for (int i = 0; i < raw.Length; ++i)
             {
-                XXMemorySection item = new XXMemorySection();
+                MemorySection item = new MemorySection();
                 item.Init(raw[i], psize);
                 m_Sections.Add(item);
             }
-            m_Sections.Sort(XXMemorySection.SortCompare);        //排序后可以进行二分查找
+            m_Sections.Sort(MemorySection.SortCompare);        //排序后可以进行二分查找
         }
 
         /// <summary>
         /// 获取扇区序列。
         /// </summary>
-        public List<XXMemorySection> Sections
+        public List<MemorySection> Sections
         {
             get { return m_Sections; }
         }
@@ -115,9 +115,9 @@ namespace XuXiang.EditorTools
         /// </summary>
         /// <param name="address">地址值。</param>
         /// <returns>扇区对象。</returns>
-        public XXMemorySection Find(ulong address)
+        public MemorySection Find(ulong address)
         {
-            XXManagedMemorySectionFinder finder = XXManagedMemorySectionFinder.Cache;
+            ManagedMemorySectionFinder finder = ManagedMemorySectionFinder.Cache;
             finder.Address = address;
             int index = m_Sections.BinarySearch(null, finder);
             return (index >= 0 && index < m_Sections.Count) ? m_Sections[index] : null;
@@ -126,6 +126,6 @@ namespace XuXiang.EditorTools
         /// <summary>
         /// 扇区序列。
         /// </summary>
-        private List<XXMemorySection> m_Sections = new List<XXMemorySection>();
+        private List<MemorySection> m_Sections = new List<MemorySection>();
     }
 }

@@ -11,7 +11,7 @@ namespace XuXiang.EditorTools
     /// <summary>
     /// 内存快照对比结果。
     /// </summary>
-    public class XXMemorySnapshotCompreResult
+    public class MemorySnapshotCompreResult
     {
         /// <summary>
         /// 差异信息。
@@ -54,7 +54,7 @@ namespace XuXiang.EditorTools
         /// <param name="before">前一份内存快照。</param>
         /// <param name="after">后一份内存快照。</param>
         /// <param name="assemblys">要过滤的整程序集，null表示不过滤。</param>
-        public void Init(XXMemorySnapshot before, XXMemorySnapshot after, List<string> assemblys = null)
+        public void Init(MemorySnapshot before, MemorySnapshot after, List<string> assemblys = null)
         {
             Clear();
             foreach (var kvp in after.ManagedObjects.ManagedObjects)
@@ -65,7 +65,7 @@ namespace XuXiang.EditorTools
                     continue;
                 }
 
-                XXManagedObject obj = before.ManagedObjects.GetObject(kvp.Key);
+                ManagedObject obj = before.ManagedObjects.GetObject(kvp.Key);
                 if (obj == null)
                 {
                     m_AddObjects.Add(kvp.Value);
@@ -80,7 +80,7 @@ namespace XuXiang.EditorTools
                     continue;
                 }
 
-                XXManagedObject obj = after.ManagedObjects.GetObject(kvp.Key);
+                ManagedObject obj = after.ManagedObjects.GetObject(kvp.Key);
                 if (obj == null)
                 {
                     m_RemoveObjects.Add(kvp.Value);
@@ -92,7 +92,7 @@ namespace XuXiang.EditorTools
             List<int> del_reomve = new List<int>();
             for (int i=0; i<m_AddObjects.Count; ++i)
             {
-                XXManagedObject obj = m_AddObjects[i];
+                ManagedObject obj = m_AddObjects[i];
                 for (int j=0; j<m_RemoveObjects.Count; ++j)
                 {
                     if (obj.IsSameValue(m_RemoveObjects[j]))
@@ -131,7 +131,7 @@ namespace XuXiang.EditorTools
         /// <param name="a">对象A。</param>
         /// <param name="b">对象B。</param>
         /// <returns>优先按类型名，其次按地址。</returns>
-        public static int CompareObject(XXManagedObject a, XXManagedObject b)
+        public static int CompareObject(ManagedObject a, ManagedObject b)
         {
             if (a.TypeDescription.TypeInfoAddress != b.TypeDescription.TypeInfoAddress)
             {
@@ -197,7 +197,7 @@ namespace XuXiang.EditorTools
         /// <summary>
         /// 获取添加的对象(归属after快照)。
         /// </summary>
-        public List<XXManagedObject> AddObjects
+        public List<ManagedObject> AddObjects
         {
             get { return m_AddObjects; }
         }
@@ -205,7 +205,7 @@ namespace XuXiang.EditorTools
         /// <summary>
         /// 获取移除的对象(归属before快照)。
         /// </summary>
-        public List<XXManagedObject> RemoveObjects
+        public List<ManagedObject> RemoveObjects
         {
             get { return m_RemoveObjects; }
         }
@@ -229,12 +229,12 @@ namespace XuXiang.EditorTools
         /// <summary>
         /// 添加的对象(归属after快照)。
         /// </summary>
-        private List<XXManagedObject> m_AddObjects = new List<XXManagedObject>();
+        private List<ManagedObject> m_AddObjects = new List<ManagedObject>();
 
         /// <summary>
         /// 移除的对象(归属before快照)。
         /// </summary>
-        private List<XXManagedObject> m_RemoveObjects = new List<XXManagedObject>();
+        private List<ManagedObject> m_RemoveObjects = new List<ManagedObject>();
 
         /// <summary>
         /// 对象差异。
@@ -250,7 +250,7 @@ namespace XuXiang.EditorTools
     /// <summary>
     /// 内存快照数据。
     /// </summary>
-    public class XXMemorySnapshot
+    public class MemorySnapshot
     {
         /// <summary>
         /// 保存内存快照。
@@ -267,7 +267,7 @@ namespace XuXiang.EditorTools
         /// </summary>
         /// <param name="path">快照保存路径。</param>
         /// <returns></returns>
-        public static XXMemorySnapshot Load(string path)
+        public static MemorySnapshot Load(string path)
         {
             if (string.IsNullOrEmpty(path) || !File.Exists(path))
             {
@@ -275,7 +275,7 @@ namespace XuXiang.EditorTools
             }
 
             RawMemorySnapshot raw = RawMemorySnapshot.Load(path);
-            XXMemorySnapshot snap = Create(raw);
+            MemorySnapshot snap = Create(raw);
             raw.Dispose();
             raw = null;
             return snap;
@@ -286,10 +286,10 @@ namespace XuXiang.EditorTools
         /// </summary>
         /// <param name="raw">Unity接口返回的最原始内存快照数据。</param>
         /// <returns>分析好的内存快照数据。</returns>
-        public static XXMemorySnapshot Create(RawMemorySnapshot raw)
+        public static MemorySnapshot Create(RawMemorySnapshot raw)
         {
             PackedMemorySnapshot packed_raw = new PackedMemorySnapshot(raw);
-            XXMemorySnapshot snapshot = new XXMemorySnapshot();
+            MemorySnapshot snapshot = new MemorySnapshot();
             DateTime start = DateTime.Now;
             snapshot.Init(packed_raw);
             long ms = (long)(DateTime.Now - start).TotalMilliseconds;
@@ -313,7 +313,7 @@ namespace XuXiang.EditorTools
         /// <summary>
         /// 获取虚拟机信息。
         /// </summary>
-        public XXVirtualMachineInformation VMInfo
+        public VirtualMachineInformation VMInfo
         {
             get { return m_VMInfo; }
         }
@@ -321,7 +321,7 @@ namespace XuXiang.EditorTools
         /// <summary>
         /// 获取类型信息。
         /// </summary>
-        public XXTypeDescriptionSnapshot TypeDescriptions
+        public TypeDescriptionSnapshot TypeDescriptions
         {
             get { return m_TypeDescriptions; }
         }
@@ -329,7 +329,7 @@ namespace XuXiang.EditorTools
         /// <summary>
         /// 获取托管堆数据。
         /// </summary>
-        public XXMemorySectionSnapshot MemorySections
+        public MemorySectionSnapshot MemorySections
         {
             get { return m_MemorySection; }
         }
@@ -337,7 +337,7 @@ namespace XuXiang.EditorTools
         /// <summary>
         /// 获取托管对象。
         /// </summary>
-        public XXManagedObjectSnapshot ManagedObjects
+        public ManagedObjectSnapshot ManagedObjects
         {
             get { return m_ManagedObjects; }
         }
@@ -345,21 +345,21 @@ namespace XuXiang.EditorTools
         /// <summary>
         /// 虚拟机信息。
         /// </summary>
-        XXVirtualMachineInformation m_VMInfo = new XXVirtualMachineInformation();
+        VirtualMachineInformation m_VMInfo = new VirtualMachineInformation();
 
         /// <summary>
         /// 类型信息。
         /// </summary>
-        XXTypeDescriptionSnapshot m_TypeDescriptions = new XXTypeDescriptionSnapshot();
+        TypeDescriptionSnapshot m_TypeDescriptions = new TypeDescriptionSnapshot();
 
         /// <summary>
         /// 托管内存扇区。
         /// </summary>
-        XXMemorySectionSnapshot m_MemorySection = new XXMemorySectionSnapshot();
+        MemorySectionSnapshot m_MemorySection = new MemorySectionSnapshot();
 
         /// <summary>
         /// 托管对象。
         /// </summary>
-        XXManagedObjectSnapshot m_ManagedObjects = new XXManagedObjectSnapshot();
+        ManagedObjectSnapshot m_ManagedObjects = new ManagedObjectSnapshot();
     }
 }

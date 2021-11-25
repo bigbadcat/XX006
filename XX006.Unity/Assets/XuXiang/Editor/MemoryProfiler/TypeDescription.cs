@@ -9,13 +9,13 @@ namespace XuXiang.EditorTools
     /// <summary>
     /// 托管类型的字段的描述。
     /// </summary>
-    public class XXFieldDescription
+    public class FieldDescription
     {
         /// <summary>
         /// 初始化。
         /// </summary>
         /// <param name="raw">原始数据。</param>
-        public void Init(FieldDescription raw)
+        public void Init(UnityEditor.MemoryProfiler.FieldDescription raw)
         {
             IsStatic = raw.isStatic;
             Name = raw.name;
@@ -47,14 +47,14 @@ namespace XuXiang.EditorTools
     /// <summary>
     /// 类型描述。
     /// </summary>
-    public class XXTypeDescription
+    public class TypeDescription
     {
         /// <summary>
         /// 初始化。
         /// </summary>
         /// <param name="raw">原始数据。</param>
         /// <param name="snap">所属快照。</param>
-        public void Init(TypeDescription raw, XXMemorySnapshot snap)
+        public void Init(UnityEditor.MemoryProfiler.TypeDescription raw, MemorySnapshot snap)
         {
             Assembly = raw.assembly;
             TypeDescriptionName = raw.name;
@@ -65,7 +65,7 @@ namespace XuXiang.EditorTools
             m_InstanceFields.Clear();
             foreach (var raw_field in raw.fields)
             {
-                XXFieldDescription field = new XXFieldDescription();
+                FieldDescription field = new FieldDescription();
                 field.Init(raw_field);
                 m_Fields.Add(field);
                 var add_to = field.IsStatic ? m_StaticFields : m_InstanceFields;
@@ -88,7 +88,7 @@ namespace XuXiang.EditorTools
         /// 建立完整的字段列表。
         /// </summary>
         /// <param name="type_descriptions">所有类型列表。</param>
-        public void BuildFullField(List<XXTypeDescription> type_descriptions)
+        public void BuildFullField(List<TypeDescription> type_descriptions)
         {
             //基类字段
             if (IsArray || IsValueType || BaseOrElementTypeIndex == -1)
@@ -96,7 +96,7 @@ namespace XuXiang.EditorTools
                 return;
             }
 
-            XXTypeDescription base_type = type_descriptions[BaseOrElementTypeIndex];
+            TypeDescription base_type = type_descriptions[BaseOrElementTypeIndex];
             while (base_type != null && !base_type.IsValueType && !base_type.IsArray)
             {
                 foreach (var field in base_type.Fields)
@@ -142,29 +142,29 @@ namespace XuXiang.EditorTools
         /// <summary>
         /// 字段列表。
         /// </summary>
-        public List<XXFieldDescription> Fields
+        public List<FieldDescription> Fields
         {
             get { return m_Fields; }
         }
-        private List<XXFieldDescription> m_Fields = new List<XXFieldDescription>();
+        private List<FieldDescription> m_Fields = new List<FieldDescription>();
 
         /// <summary>
         /// 静态字段列表。
         /// </summary>
-        public List<XXFieldDescription> StaticFields
+        public List<FieldDescription> StaticFields
         {
             get { return m_StaticFields; }
         }
-        private List<XXFieldDescription> m_StaticFields = new List<XXFieldDescription>();
+        private List<FieldDescription> m_StaticFields = new List<FieldDescription>();
 
         /// <summary>
         /// 实例字段列表。
         /// </summary>
-        public List<XXFieldDescription> InstanceFields
+        public List<FieldDescription> InstanceFields
         {
             get { return m_InstanceFields; }
         }
-        private List<XXFieldDescription> m_InstanceFields = new List<XXFieldDescription>();
+        private List<FieldDescription> m_InstanceFields = new List<FieldDescription>();
 
         /// <summary>
         /// 是否值类型。
@@ -204,19 +204,19 @@ namespace XuXiang.EditorTools
         /// <summary>
         /// 获取所属快照。
         /// </summary>
-        public XXMemorySnapshot BelongSnap { get; private set; }
+        public MemorySnapshot BelongSnap { get; private set; }
     }
 
     /// <summary>
     /// 类型快照。
     /// </summary>
-    public class XXTypeDescriptionSnapshot
+    public class TypeDescriptionSnapshot
     {
         /// <summary>
         /// 初始化。
         /// </summary>
         /// <param name="raw">原始数据。</param>
-        public void Init(TypeDescription[] raw, XXMemorySnapshot mem_snap)
+        public void Init(UnityEditor.MemoryProfiler.TypeDescription[] raw, MemorySnapshot mem_snap)
         {
             //生成自己的数据
             m_TypeDescriptions.Clear();
@@ -224,7 +224,7 @@ namespace XuXiang.EditorTools
             m_AddressToTypeDescription.Clear();
             for (int i = 0; i < raw.Length; ++i)
             {
-                XXTypeDescription item = new XXTypeDescription();
+                TypeDescription item = new TypeDescription();
                 item.Init(raw[i], mem_snap);
                 m_TypeDescriptions.Add(item);
                 m_AddressToTypeDescription.Add(item.TypeInfoAddress, item);
@@ -242,7 +242,7 @@ namespace XuXiang.EditorTools
         /// </summary>
         /// <param name="index">类型索引。</param>
         /// <returns>类型信息。</returns>
-        public XXTypeDescription GetType(int index)
+        public TypeDescription GetType(int index)
         {
             if (index < 0 || index >= m_TypeDescriptions.Count)
             {
@@ -256,9 +256,9 @@ namespace XuXiang.EditorTools
         /// </summary>
         /// <param name="address">类型地址。</param>
         /// <returns>类型信息。</returns>
-        public XXTypeDescription GetTypeByAddress(ulong address)
+        public TypeDescription GetTypeByAddress(ulong address)
         {
-            XXTypeDescription ret;
+            TypeDescription ret;
             if (m_AddressToTypeDescription.TryGetValue(address, out ret))
             {
                 return ret;
@@ -269,7 +269,7 @@ namespace XuXiang.EditorTools
         /// <summary>
         /// 获取类型列表。
         /// </summary>
-        public List<XXTypeDescription> TypesDescriptions
+        public List<TypeDescription> TypesDescriptions
         {
             get { return m_TypeDescriptions; }
         }
@@ -277,11 +277,11 @@ namespace XuXiang.EditorTools
         /// <summary>
         /// 类型序列，按原始索引排列。
         /// </summary>
-        private List<XXTypeDescription> m_TypeDescriptions = new List<XXTypeDescription>();
+        private List<TypeDescription> m_TypeDescriptions = new List<TypeDescription>();
 
         /// <summary>
         /// 通过地址获取类型信息。
         /// </summary>
-        private Dictionary<ulong, XXTypeDescription> m_AddressToTypeDescription = new Dictionary<ulong, XXTypeDescription>();
+        private Dictionary<ulong, TypeDescription> m_AddressToTypeDescription = new Dictionary<ulong, TypeDescription>();
     }
 }

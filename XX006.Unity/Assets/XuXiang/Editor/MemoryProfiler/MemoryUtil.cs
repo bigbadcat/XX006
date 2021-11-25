@@ -9,7 +9,7 @@ namespace XuXiang.EditorTools
     /// <summary>
     /// 工具函数。
     /// </summary>
-    public static class XXUtil
+    public static class MemoryUtil
     {
         /// <summary>
         /// 读取数据。
@@ -53,21 +53,21 @@ namespace XuXiang.EditorTools
         /// <param name="array_type">数组元素类型。</param>
         /// <param name="vmi">虚拟机信息。</param>
         /// <returns>数组长度。</returns>
-        public static int ReadArrayLength(byte[] bytes, int offset, XXTypeDescription array_type, XXMemorySnapshot mem_snap)
+        public static int ReadArrayLength(byte[] bytes, int offset, TypeDescription array_type, MemorySnapshot mem_snap)
         {
-            XXVirtualMachineInformation vmi = mem_snap.VMInfo;
-            ulong bounds = XXUtil.ReadPointer(bytes, offset + vmi.ArrayBoundsOffsetInHeader, vmi.PointerSize);
+            VirtualMachineInformation vmi = mem_snap.VMInfo;
+            ulong bounds = MemoryUtil.ReadPointer(bytes, offset + vmi.ArrayBoundsOffsetInHeader, vmi.PointerSize);
             if (bounds == 0)
             {
-                return (int)XXUtil.ReadPointer(bytes, offset + vmi.ArraySizeOffsetInHeader, vmi.PointerSize);
+                return (int)MemoryUtil.ReadPointer(bytes, offset + vmi.ArraySizeOffsetInHeader, vmi.PointerSize);
             }
 
-            XXMemorySection section = mem_snap.MemorySections.Find(bounds);
+            MemorySection section = mem_snap.MemorySections.Find(bounds);
             int cursor = (int)(bounds - section.StartAddress);
             int length = 1;
             for (int i=0; i<array_type.ArrayRank; ++i)
             {
-                length *= (int)XXUtil.ReadPointer(section.Bytes, cursor, vmi.PointerSize);
+                length *= (int)MemoryUtil.ReadPointer(section.Bytes, cursor, vmi.PointerSize);
                 cursor += vmi.PointerSize == 4 ? 8 : 16;
             }
             return length;
@@ -81,9 +81,9 @@ namespace XuXiang.EditorTools
         /// <param name="array_type">数组元素类型。</param>
         /// <param name="vmi">虚拟机信息。</param>
         /// <returns>数组长度。</returns>
-        public static int ReadArrayObjectSize(byte[] bytes, int offset, XXTypeDescription array_type, XXMemorySnapshot mem_snap)
+        public static int ReadArrayObjectSize(byte[] bytes, int offset, TypeDescription array_type, MemorySnapshot mem_snap)
         {
-            XXVirtualMachineInformation vmi = mem_snap.VMInfo;
+            VirtualMachineInformation vmi = mem_snap.VMInfo;
             int len = ReadArrayLength(bytes, offset, array_type, mem_snap);
             int esize = array_type.IsValueType ? array_type.Size : vmi.PointerSize;
             int size = vmi.ArrayHeaderSize + esize * len;
@@ -97,7 +97,7 @@ namespace XuXiang.EditorTools
         /// <param name="offset">对象起始地址偏移。</param>
         /// <param name="vmi">虚拟机信息。</param>
         /// <returns>字符串对象大小。</returns>
-        public static int ReadStringObjectSize(byte[] bytes, int offset, XXVirtualMachineInformation vmi)
+        public static int ReadStringObjectSize(byte[] bytes, int offset, VirtualMachineInformation vmi)
         {
             //数据区的前4个字节表示长度
             int len = BitConverter.ToInt32(bytes, offset + vmi.ObjectHeaderSize);
@@ -112,7 +112,7 @@ namespace XuXiang.EditorTools
         /// <param name="offset">对象起始地址偏移。</param>
         /// <param name="vmi">虚拟机信息。</param>
         /// <returns>字符串的值。</returns>
-        public static string ReadStringValue(byte[] bytes, int offset, XXVirtualMachineInformation vmi)
+        public static string ReadStringValue(byte[] bytes, int offset, VirtualMachineInformation vmi)
         {
             int len = BitConverter.ToInt32(bytes, offset + vmi.ObjectHeaderSize);
             string text = System.Text.Encoding.Unicode.GetString(bytes, offset + vmi.ObjectHeaderSize + 4, len * 2);

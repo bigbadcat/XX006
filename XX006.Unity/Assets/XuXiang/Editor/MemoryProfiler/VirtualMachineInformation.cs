@@ -8,13 +8,13 @@ namespace XuXiang.EditorTools
     /// <summary>
     /// 有关提供内存快照的虚拟机的信息。
     /// </summary>
-    public class XXVirtualMachineInformation
+    public class VirtualMachineInformation
     {
         /// <summary>
         /// 初始化。
         /// </summary>
         /// <param name="raw">原始数据。</param>
-        public void Init(VirtualMachineInformation raw)
+        public void Init(UnityEditor.MemoryProfiler.VirtualMachineInformation raw)
         {
             AllocationGranularity = raw.allocationGranularity;
             ArrayBoundsOffsetInHeader = raw.arrayBoundsOffsetInHeader;

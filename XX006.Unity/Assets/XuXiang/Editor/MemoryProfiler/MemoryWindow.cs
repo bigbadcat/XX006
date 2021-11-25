@@ -250,14 +250,14 @@ namespace XuXiang.EditorTools
         /// <summary>
         /// 绘制对象列表。
         /// </summary>
-        private void OnDrawObjectList(List<XXManagedObject> objects)
+        private void OnDrawObjectList(List<ManagedObject> objects)
         {
             int start = m_CurPageIndex * OBJECT_PAGE_SHOW_NUMBER;
             m_PageNumber = (int)Mathf.Ceil(objects.Count * 1.0f / OBJECT_PAGE_SHOW_NUMBER);
             for (int i = 0; i < OBJECT_PAGE_SHOW_NUMBER && (start + i < objects.Count); ++i)
             {
                 int index = start + i;
-                XXManagedObject obj = objects[index];
+                ManagedObject obj = objects[index];
                 if (i % 2 == 0)
                 {
                     EditorGUILayout.BeginHorizontal(GUILayout.ExpandWidth(true));
@@ -290,7 +290,7 @@ namespace XuXiang.EditorTools
         /// 显示对象。
         /// </summary>
         /// <param name="obj">对象信息。</param>
-        private void ShowObject(XXManagedObject obj)
+        private void ShowObject(ManagedObject obj)
         {
             if (m_CurShowObject != null && m_PreObjects.Count < 100)
             {
@@ -313,7 +313,7 @@ namespace XuXiang.EditorTools
             {
                 int index = start + i;
                 var diff = diffs[index];
-                XXTypeDescription type_des = m_Snap2.TypeDescriptions.GetTypeByAddress(diff.TypeAddress);
+                TypeDescription type_des = m_Snap2.TypeDescriptions.GetTypeByAddress(diff.TypeAddress);
                 if (i % 2 == 0)
                 {
                     EditorGUILayout.BeginHorizontal(GUILayout.ExpandWidth(true));
@@ -374,7 +374,7 @@ namespace XuXiang.EditorTools
                 EditorGUILayout.EndHorizontal();
             }
 
-            XXTypeDescription type_des = m_CurShowObject.TypeDescription;
+            TypeDescription type_des = m_CurShowObject.TypeDescription;
             GUILayout.Label(type_des.TypeDescriptionName);            
             EditorGUILayout.BeginHorizontal();
             GUILayout.Label(string.Format("Address:0x{0:X}", m_CurShowObject.Address), GUILayout.MaxWidth(150));
@@ -401,7 +401,7 @@ namespace XuXiang.EditorTools
         /// 绘制对象引用的信息。
         /// </summary>
         /// <param name="obj">对象信息。</param>
-        private void DrawObjectReference(XXManagedObject obj)
+        private void DrawObjectReference(ManagedObject obj)
         {
             //成员引用除了数组外全部显示
             int n = obj.ReferenceTo.Count;
@@ -428,7 +428,7 @@ namespace XuXiang.EditorTools
         /// 绘制对象被引用的信息。
         /// </summary>
         /// <param name="obj">对象信息。</param>
-        private void DrawObjectReferenceBy(XXManagedObject obj)
+        private void DrawObjectReferenceBy(ManagedObject obj)
         {
             //被引用分页显示
             int n = obj.ReferenceFrom.Count;
@@ -445,10 +445,10 @@ namespace XuXiang.EditorTools
                 string title = string.Empty;
                 switch (ref_from.Type)
                 {
-                    case XXObjectReferenceFrom.FromType.GCHandle:
+                    case ObjectReferenceFrom.FromType.GCHandle:
                         title = string.Format("GCHandle Index:{0}", ref_from.GCHandleIndex);
                         break;
-                    case XXObjectReferenceFrom.FromType.Field:
+                    case ObjectReferenceFrom.FromType.Field:
                         if (ref_from.ObjectAddress != 0)
                         {
                             title = string.Format("Object 0x{0:X} {1}", ref_from.ObjectAddress, ref_from.FieldPath);
@@ -478,7 +478,7 @@ namespace XuXiang.EditorTools
             ClearData();
 
             EditorUtility.DisplayProgressBar("LoadSnap", m_SnapItem1.Path, 0);
-            m_Sanp1 = XXMemorySnapshot.Load(m_SnapItem1.Path);
+            m_Sanp1 = MemorySnapshot.Load(m_SnapItem1.Path);
             if (m_Sanp1 == null)
             {
                 Debug.LogErrorFormat("Load snap1 failed. path:{0}", m_SnapItem1.Path);
@@ -487,7 +487,7 @@ namespace XuXiang.EditorTools
             }
 
             EditorUtility.DisplayProgressBar("LoadSnap", m_SnapItem2.Path, 0.4f);
-            m_Snap2 = XXMemorySnapshot.Load(m_SnapItem2.Path);
+            m_Snap2 = MemorySnapshot.Load(m_SnapItem2.Path);
             if (m_Snap2 == null)
             {
                 m_Sanp1 = null;
@@ -635,42 +635,42 @@ namespace XuXiang.EditorTools
         /// <summary>
         /// 快照1。
         /// </summary>
-        private XXMemorySnapshot m_Sanp1 = null;
+        private MemorySnapshot m_Sanp1 = null;
 
         /// <summary>
         /// 快照2.
         /// </summary>
-        private XXMemorySnapshot m_Snap2 = null;
+        private MemorySnapshot m_Snap2 = null;
 
         /// <summary>
         /// 对比结果。
         /// </summary>
-        private XXMemorySnapshotCompreResult m_Result = new XXMemorySnapshotCompreResult();
+        private MemorySnapshotCompreResult m_Result = new MemorySnapshotCompreResult();
 
         /// <summary>
         /// 当前查看的对象。
         /// </summary>
-        private XXManagedObject m_CurShowObject = null;
+        private ManagedObject m_CurShowObject = null;
 
         /// <summary>
         /// 上次查看的对象列表。
         /// </summary>
-        private List<XXManagedObject> m_PreObjects = new List<XXManagedObject>();
+        private List<ManagedObject> m_PreObjects = new List<ManagedObject>();
 
         /// <summary>
         /// 后续查看的对象列表。
         /// </summary>
-        private List<XXManagedObject> m_NextObjects = new List<XXManagedObject>();
+        private List<ManagedObject> m_NextObjects = new List<ManagedObject>();
 
         /// <summary>
         /// 当前查看的对象列表。
         /// </summary>
-        private List<XXManagedObject> m_ShowObjects = new List<XXManagedObject>();
+        private List<ManagedObject> m_ShowObjects = new List<ManagedObject>();
 
         /// <summary>
         /// 当前查看的对象列表类型。
         /// </summary>
-        private XXTypeDescription m_ShowObjectsType = null;
+        private TypeDescription m_ShowObjectsType = null;
 
         #endregion
     }

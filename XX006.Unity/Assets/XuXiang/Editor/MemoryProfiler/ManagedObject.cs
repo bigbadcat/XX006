@@ -9,7 +9,7 @@ namespace XuXiang.EditorTools
     /// <summary>
     /// 保存对象被引用的信息。
     /// </summary>
-    public class XXObjectReferenceFrom
+    public class ObjectReferenceFrom
     {
         /// <summary>
         /// 引用来源类型。
@@ -31,7 +31,7 @@ namespace XuXiang.EditorTools
         /// 构造函数。
         /// </summary>
         /// <param name="gc_index">GCHandle索引。</param>
-        public XXObjectReferenceFrom(int gc_index)
+        public ObjectReferenceFrom(int gc_index)
         {
             Type = FromType.GCHandle;
             GCHandleIndex = gc_index;
@@ -44,7 +44,7 @@ namespace XuXiang.EditorTools
         /// </summary>
         /// <param name="field_path">字段路径，若为静态字段则包含类名前缀。</param>
         /// <param name="address">对象地址，0标识静态字段。</param>
-        public XXObjectReferenceFrom(string field_path, ulong address)
+        public ObjectReferenceFrom(string field_path, ulong address)
         {
             Type = FromType.Field;
             GCHandleIndex = 0;
@@ -76,14 +76,14 @@ namespace XuXiang.EditorTools
     /// <summary>
     /// 保存对象引用的信息。
     /// </summary>
-    public class XXObjectReferenceTo
+    public class ObjectReferenceTo
     {
         /// <summary>
         /// 构造函数。
         /// </summary>
         /// <param name="name">字段名称。</param>
         /// <param name="address">对象地址。</param>
-        public XXObjectReferenceTo(string name, ulong address)
+        public ObjectReferenceTo(string name, ulong address)
         {
             Name = name;
             Address = address;
@@ -103,7 +103,7 @@ namespace XuXiang.EditorTools
     /// <summary>
     /// 托管对象(值类型数据不统计)。
     /// </summary>
-    public class XXManagedObject
+    public class ManagedObject
     {
         /// <summary>
         /// 初始化对象。
@@ -112,26 +112,26 @@ namespace XuXiang.EditorTools
         /// <param name="type_description">类型信息。</param>
         /// <param name="section">所在内存扇区。</param>
         /// <param name="snap">所属快照。</param>
-        public void Init(ulong address, XXTypeDescription type_description, XXMemorySection section, XXMemorySnapshot snap)
+        public void Init(ulong address, TypeDescription type_description, MemorySection section, MemorySnapshot snap)
         {
             Address = address;
             TypeDescription = type_description;
             Size = TypeDescription.Size;        //数组和字符串需要特殊处理
             MemorySection = section;
             BelongSnap = snap;
-            ReferenceFrom = new List<XXObjectReferenceFrom>();
-            ReferenceTo = new List<XXObjectReferenceTo>();
+            ReferenceFrom = new List<ObjectReferenceFrom>();
+            ReferenceTo = new List<ObjectReferenceTo>();
             if (type_description.IsArray)
             {
                 int offset = (int)(address - MemorySection.StartAddress);
-                Size = XXUtil.ReadArrayObjectSize(MemorySection.Bytes, offset, type_description, snap);
+                Size = MemoryUtil.ReadArrayObjectSize(MemorySection.Bytes, offset, type_description, snap);
             }
 
             if (TypeDescription.TypeDescriptionName.CompareTo("System.String") == 0)
             {
                 int offset = (int)(address - MemorySection.StartAddress);
-                Size = XXUtil.ReadStringObjectSize(MemorySection.Bytes, offset, snap.VMInfo);
-                ValueText = XXUtil.ReadStringValue(MemorySection.Bytes, offset, snap.VMInfo);
+                Size = MemoryUtil.ReadStringObjectSize(MemorySection.Bytes, offset, snap.VMInfo);
+                ValueText = MemoryUtil.ReadStringValue(MemorySection.Bytes, offset, snap.VMInfo);
             }
             else
             {
@@ -144,7 +144,7 @@ namespace XuXiang.EditorTools
         /// </summary>
         /// <param name="to">要比较的。可能与自身不是来着同一份快照的对象，但必须是同一运行时的。</param>
         /// <returns>其它类型对象只比较地址。</returns>
-        public bool IsSameValue(XXManagedObject to)
+        public bool IsSameValue(ManagedObject to)
         {
             //必须是同类型
             if (this.TypeDescription.TypeInfoAddress != to.TypeDescription.TypeInfoAddress)
@@ -168,7 +168,7 @@ namespace XuXiang.EditorTools
         /// <summary>
         /// 类型信息。
         /// </summary>
-        public XXTypeDescription TypeDescription { get; private set; }
+        public TypeDescription TypeDescription { get; private set; }
 
         /// <summary>
         /// 对象占用的内存大小。
@@ -178,12 +178,12 @@ namespace XuXiang.EditorTools
         /// <summary>
         /// 所在的内存扇区。
         /// </summary>
-        public XXMemorySection MemorySection { get; private set; }
+        public MemorySection MemorySection { get; private set; }
 
         /// <summary>
         /// 获取所属快照。
         /// </summary>
-        public XXMemorySnapshot BelongSnap { get; private set; }
+        public MemorySnapshot BelongSnap { get; private set; }
 
         /// <summary>
         /// 值内容。
@@ -207,25 +207,25 @@ namespace XuXiang.EditorTools
         /// <summary>
         /// 该对象被谁引用。
         /// </summary>
-        public List<XXObjectReferenceFrom> ReferenceFrom { get; private set; }
+        public List<ObjectReferenceFrom> ReferenceFrom { get; private set; }
 
         /// <summary>
         /// 该对象引用的其它对象。
         /// </summary>
-        public List<XXObjectReferenceTo> ReferenceTo { get; private set; }
+        public List<ObjectReferenceTo> ReferenceTo { get; private set; }
     }
 
     /// <summary>
     /// 托管对象快照。
     /// </summary>
-    public class XXManagedObjectSnapshot
+    public class ManagedObjectSnapshot
     {
         /// <summary>
         /// 分析对象。
         /// </summary>
         /// <param name="raw_gc">原始GCHandle列表。</param>
         /// <param name="mem_snap">所属内存快照对象。</param>
-        public void Analyze(PackedGCHandle[] raw_gc, XXMemorySnapshot mem_snap)
+        public void Analyze(PackedGCHandle[] raw_gc, MemorySnapshot mem_snap)
         {
             int psize = mem_snap.VMInfo.PointerSize;
             m_ManagedObjects.Clear();
@@ -233,10 +233,10 @@ namespace XuXiang.EditorTools
             for (int i=0; i<raw_gc.Length; ++i)
             {
                 ulong address = psize == 4 ? (raw_gc[i].target & 0xFFFFFFFF) : raw_gc[i].target;
-                XXManagedObject obj = AnalyzeManagedObject(address, mem_snap);
+                ManagedObject obj = AnalyzeManagedObject(address, mem_snap);
                 if (obj != null)
                 {
-                    var from = new XXObjectReferenceFrom(i);
+                    var from = new ObjectReferenceFrom(i);
                     obj.ReferenceFrom.Add(from);
                 }              
             }
@@ -255,9 +255,9 @@ namespace XuXiang.EditorTools
         /// </summary>
         /// <param name="address">对象地址。</param>
         /// <returns>对象信息。</returns>
-        public XXManagedObject GetObject(ulong address)
+        public ManagedObject GetObject(ulong address)
         {
-            XXManagedObject obj;
+            ManagedObject obj;
             if (m_ManagedObjects.TryGetValue(address, out obj))
             {
                 return obj;
@@ -268,7 +268,7 @@ namespace XuXiang.EditorTools
         /// <summary>
         /// 获取对象集合。
         /// </summary>
-        public Dictionary<ulong, XXManagedObject> ManagedObjects
+        public Dictionary<ulong, ManagedObject> ManagedObjects
         {
             get { return m_ManagedObjects; }
         }
@@ -278,22 +278,22 @@ namespace XuXiang.EditorTools
         /// </summary>
         /// <param name="address">对象地址。</param>
         /// <param name="mem_snap">所属内存快照对象。</param>
-        private XXManagedObject AnalyzeManagedObject(ulong address, XXMemorySnapshot mem_snap)
+        private ManagedObject AnalyzeManagedObject(ulong address, MemorySnapshot mem_snap)
         {
             //判断空指针或者是否已经分析过了
             if (address <= 0 || m_BadObjectAddress.ContainsKey(address))
             {
                 return null;
             }
-            XXManagedObject obj;
+            ManagedObject obj;
             if (m_ManagedObjects.TryGetValue(address, out obj))
             {
                 return obj;
             }
 
             //对象数据第一个指针指向vtable，vatable第一个指针指向类型数据
-            XXVirtualMachineInformation vmi = mem_snap.VMInfo;
-            XXMemorySection section_obj = mem_snap.MemorySections.Find(address);
+            VirtualMachineInformation vmi = mem_snap.VMInfo;
+            MemorySection section_obj = mem_snap.MemorySections.Find(address);
             if (section_obj == null)
             {
                 m_BadObjectAddress.Add(address, 0);
@@ -301,23 +301,23 @@ namespace XuXiang.EditorTools
             }
 
             int offset_obj = (int)(address - section_obj.StartAddress);
-            ulong address_vtable = XXUtil.ReadPointer(section_obj.Bytes, offset_obj, vmi.PointerSize);
-            XXMemorySection section_vtable = mem_snap.MemorySections.Find(address_vtable);
+            ulong address_vtable = MemoryUtil.ReadPointer(section_obj.Bytes, offset_obj, vmi.PointerSize);
+            MemorySection section_vtable = mem_snap.MemorySections.Find(address_vtable);
             if (section_vtable == null)
             {
                 m_BadObjectAddress.Add(address, 1);
                 return null;
             }
             int offset_vtable = (int)(address_vtable - section_vtable.StartAddress);
-            ulong type_address = XXUtil.ReadPointer(section_vtable.Bytes, offset_vtable, vmi.PointerSize);
-            XXTypeDescription type_description = mem_snap.TypeDescriptions.GetTypeByAddress(type_address);
+            ulong type_address = MemoryUtil.ReadPointer(section_vtable.Bytes, offset_vtable, vmi.PointerSize);
+            TypeDescription type_description = mem_snap.TypeDescriptions.GetTypeByAddress(type_address);
             if (type_description == null)
             {
                 m_BadObjectAddress.Add(address, 2);
                 return null;
             }
 
-            obj = new XXManagedObject();
+            obj = new ManagedObject();
             obj.Init(address, type_description, section_obj, mem_snap);
             m_ManagedObjects.Add(obj.Address, obj);
 
@@ -326,8 +326,8 @@ namespace XuXiang.EditorTools
             {
                 if (type_description.BaseOrElementTypeIndex != -1)
                 {
-                    XXTypeDescription ele_type = mem_snap.TypeDescriptions.TypesDescriptions[type_description.BaseOrElementTypeIndex];
-                    int array_length = XXUtil.ReadArrayLength(section_obj.Bytes, offset_obj, type_description, mem_snap);
+                    TypeDescription ele_type = mem_snap.TypeDescriptions.TypesDescriptions[type_description.BaseOrElementTypeIndex];
+                    int array_length = MemoryUtil.ReadArrayLength(section_obj.Bytes, offset_obj, type_description, mem_snap);
                     int cursor = offset_obj + vmi.ArrayHeaderSize;
                     for (int i = 0; i < array_length; ++i)
                     {
@@ -338,9 +338,9 @@ namespace XuXiang.EditorTools
                         }
                         else
                         {
-                            ulong e_address = XXUtil.ReadPointer(section_obj.Bytes, cursor, vmi.PointerSize);
+                            ulong e_address = MemoryUtil.ReadPointer(section_obj.Bytes, cursor, vmi.PointerSize);
                             cursor += vmi.PointerSize;
-                            XXManagedObject to_obj = AnalyzeManagedObject(e_address, mem_snap);
+                            ManagedObject to_obj = AnalyzeManagedObject(e_address, mem_snap);
                             AddReferenceInfo(obj, i.ToString(), to_obj);
                         }
                     }
@@ -362,7 +362,7 @@ namespace XuXiang.EditorTools
         /// <param name="mem_snap">所属内存快照对象。</param>
         /// <param name="belong">所属对象。</param>
         /// <param name="field_prefix">成员前缀。</param>
-        private void AnalyzeManagedObject(byte[] bytes, int offset, List<XXFieldDescription> fields, XXMemorySnapshot mem_snap, XXManagedObject belong, string field_prefix)
+        private void AnalyzeManagedObject(byte[] bytes, int offset, List<FieldDescription> fields, MemorySnapshot mem_snap, ManagedObject belong, string field_prefix)
         {
             int hs = mem_snap.VMInfo.ObjectHeaderSize;
             int psize = mem_snap.VMInfo.PointerSize;
@@ -373,7 +373,7 @@ namespace XuXiang.EditorTools
                     continue;
                 }
 
-                XXTypeDescription type_des = mem_snap.TypeDescriptions.GetType(field.TypeIndex);
+                TypeDescription type_des = mem_snap.TypeDescriptions.GetType(field.TypeIndex);
                 string field_path = string.IsNullOrEmpty(field_prefix) ? field.Name : string.Format("{0}.{1}", field_prefix, field.Name);
                 if (type_des.IsValueType)
                 {
@@ -385,8 +385,8 @@ namespace XuXiang.EditorTools
                 }
                 else
                 {
-                    ulong address = address = XXUtil.ReadPointer(bytes, offset + field.Offset - ((field.IsStatic) ? 0 : hs), psize);
-                    XXManagedObject obj = AnalyzeManagedObject(address, mem_snap);
+                    ulong address = address = MemoryUtil.ReadPointer(bytes, offset + field.Offset - ((field.IsStatic) ? 0 : hs), psize);
+                    ManagedObject obj = AnalyzeManagedObject(address, mem_snap);
                     AddReferenceInfo(belong, field_path, obj);
                 }
             }
@@ -398,15 +398,15 @@ namespace XuXiang.EditorTools
         /// <param name="from">引用源对象。</param>
         /// <param name="field_name">字段名称。</param>
         /// <param name="to">被引用的对象。</param>
-        private static void AddReferenceInfo(XXManagedObject from, string field_name, XXManagedObject to)
+        private static void AddReferenceInfo(ManagedObject from, string field_name, ManagedObject to)
         {
             if (to != null)
             {
-                to.ReferenceFrom.Add(new XXObjectReferenceFrom(field_name, from != null ? from.Address : 0));
+                to.ReferenceFrom.Add(new ObjectReferenceFrom(field_name, from != null ? from.Address : 0));
             }
             if (from != null)
             {
-                from.ReferenceTo.Add(new XXObjectReferenceTo(field_name, to != null ? to.Address : 0));
+                from.ReferenceTo.Add(new ObjectReferenceTo(field_name, to != null ? to.Address : 0));
             }
         }
 
@@ -418,6 +418,6 @@ namespace XuXiang.EditorTools
         /// <summary>
         /// 托管对象列表。
         /// </summary>
-        private Dictionary<ulong, XXManagedObject> m_ManagedObjects = new Dictionary<ulong, XXManagedObject>();
+        private Dictionary<ulong, ManagedObject> m_ManagedObjects = new Dictionary<ulong, ManagedObject>();
     }
 }
