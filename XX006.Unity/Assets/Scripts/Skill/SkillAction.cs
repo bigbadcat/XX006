@@ -23,9 +23,14 @@ namespace XX006.Fight
         Animation,
 
         /// <summary>
-        /// 播放效果。
+        /// 播放特效。
         /// </summary>
         Effect,
+
+        /// <summary>
+        /// 改变压弯参数。
+        /// </summary>
+        ChangeBend,
 
         #endregion
     }
@@ -107,5 +112,18 @@ namespace XX006.Fight
         public string AniName = string.Empty;
 
         public float AniMix = 0.1f;
+    }
+
+    public class SkillActionChangeBend : SkillAction
+    {
+        public override void DoAction(Player player)
+        {
+            SkillEffectChangeBend ecb = new SkillEffectChangeBend();
+            ecb.ChangeCurve = ChangeCurve;
+            ecb.Duration = Duration;
+            player.StartEffect(ecb, 0, Duration);
+        }
+
+        public AnimationCurve ChangeCurve = null;
     }
 }

@@ -84,7 +84,15 @@ public class Player : MonoBehaviour
         }
         else if (id == 2)
         {
+            SkillActionAnimation a_ani = new SkillActionAnimation();
+            a_ani.AniName = "skill04";
+            a_ani.Duration = 2.2f;
+            m_CurSkill.AddAction(a_ani, 0);
 
+            SkillActionChangeBend a_cb = new SkillActionChangeBend();
+            a_cb.ChangeCurve = new AnimationCurve(new Keyframe(0, 0), new Keyframe(1.4f, 0), new Keyframe(1.6f, 8));
+            a_cb.Duration = 2.0f;
+            m_CurSkill.AddAction(a_cb, 0);
         }
         else if (id == 3)
         {

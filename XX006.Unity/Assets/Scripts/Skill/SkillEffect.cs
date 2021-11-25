@@ -154,4 +154,37 @@ namespace XX006.Fight
 
         public float Speed = 1;
     }
+
+    public class SkillEffectChangeBend : SkillEffect
+    {
+        protected override void OnStart()
+        {
+            m_BendArea = m_Target?.GetComponent<BendArea>();
+            if (m_BendArea != null)
+            {
+                m_BendArea.Range = ChangeCurve.Evaluate(0);
+            }
+        }
+
+        protected override void OnUpdate(float dt)
+        {
+            if (m_BendArea != null)
+            {
+                m_BendArea.Range = ChangeCurve.Evaluate(m_Count);
+            }
+        }
+
+        protected override void OnEnd()
+        {
+            if (m_BendArea != null)
+            {
+                m_BendArea.Range = 1;
+            }
+            m_BendArea = null;
+        }
+
+        public AnimationCurve ChangeCurve = null;
+
+        private BendArea m_BendArea = null;
+    }
 }
