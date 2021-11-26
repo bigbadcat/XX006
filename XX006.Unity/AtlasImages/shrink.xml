@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--用于配置需要收缩的列表 type:0都收缩 1水平收缩 2垂直收缩 -->
+<Atlases version="1.0">
+	<Atlas name="ui_app">
+		<image name="none" type="0" />
+		<image name="blank" type="0" />
+		<image name="bar_blue" type="0" />
+		<image name="bar_blue_back" type="0" />
+	</Atlas>
+	<Atlas name="ui_common">
+		<image name="none" type="0" />
+		<image name="blank" type="0" />
+		<image name="bar_blue" type="0" />
+		<image name="bar_blue_back" type="0" />
+		<image name="bar_green" type="0" />
+		<image name="bar_green_back" type="0" />
+		<image name="bar_grey" type="0" />
+		<image name="bar_grey_back" type="0" />
+		<image name="bar_purple" type="0" />
+		<image name="bar_purple_back" type="0" />
+		<image name="bar_red" type="0" />
+		<image name="bar_red_back" type="0" />
+		<image name="bar_yellow" type="0" />
+		<image name="bar_yellow_back" type="0" />
+	</Atlas>
+</Atlases>
