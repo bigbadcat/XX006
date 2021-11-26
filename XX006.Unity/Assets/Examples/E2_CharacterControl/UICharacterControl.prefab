@@ -2046,6 +2046,12 @@ PrefabInstance:
       propertyPath: m_Name
       value: SkillButton1
       objectReference: {fileID: 0}
+    - target: {fileID: 114528231687874770, guid: 7e81dcd9da9e97d43993956194ebaa02,
+        type: 3}
+      propertyPath: m_Sprite
+      value: 
+      objectReference: {fileID: -4862007459847594908, guid: c71072544f0b16a44b4a38a8ea958f49,
+        type: 3}
     - target: {fileID: 224595218866707704, guid: 7e81dcd9da9e97d43993956194ebaa02,
         type: 3}
       propertyPath: m_Pivot.x
@@ -2195,6 +2201,12 @@ PrefabInstance:
       propertyPath: m_Name
       value: SkillButton2
       objectReference: {fileID: 0}
+    - target: {fileID: 114528231687874770, guid: 7e81dcd9da9e97d43993956194ebaa02,
+        type: 3}
+      propertyPath: m_Sprite
+      value: 
+      objectReference: {fileID: -7914957615168794202, guid: c71072544f0b16a44b4a38a8ea958f49,
+        type: 3}
     - target: {fileID: 224595218866707704, guid: 7e81dcd9da9e97d43993956194ebaa02,
         type: 3}
       propertyPath: m_Pivot.x
@@ -2344,6 +2356,12 @@ PrefabInstance:
       propertyPath: m_Name
       value: SkillButton3
       objectReference: {fileID: 0}
+    - target: {fileID: 114528231687874770, guid: 7e81dcd9da9e97d43993956194ebaa02,
+        type: 3}
+      propertyPath: m_Sprite
+      value: 
+      objectReference: {fileID: -675104096977794455, guid: c71072544f0b16a44b4a38a8ea958f49,
+        type: 3}
     - target: {fileID: 224595218866707704, guid: 7e81dcd9da9e97d43993956194ebaa02,
         type: 3}
       propertyPath: m_Pivot.x

@@ -28,7 +28,7 @@ namespace XX006.UI
                 m_CurDT = dt;
                 DTValue.text = m_CurDT.ToString();
             }
-            int fps = (int)(10000.0f / m_DTCount.Average + 0.4f);
+            int fps = (int)(10000.0f / m_DTCount.Average);
             if (m_CurFPS != fps)
             {
                 m_CurFPS = fps;
