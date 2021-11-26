@@ -36,11 +36,6 @@ namespace U3dFrameWork.Editor
             public List<string> TileNames = null;
 
             /// <summary>
-            /// 需要操作的图片。
-            /// </summary>
-            public Texture WantOperate = null;
-
-            /// <summary>
             /// 加载贴图列表。
             /// </summary>
             public void LoadTitleNames(string tile_folder)
@@ -81,8 +76,7 @@ namespace U3dFrameWork.Editor
         public List<string> GetUIPrefabs()
         {
             List<string> prefabs = new List<string>();
-            GetPrefabs(prefabs, "Art/Prefab");
-            GetPrefabs(prefabs, "Art_Res/Prefabs");
+            GetPrefabs(prefabs, "ResourcesEx/UI");
             return prefabs;
         }
 
@@ -253,6 +247,7 @@ namespace U3dFrameWork.Editor
             GUILayout.Label("AtlasName", GUILayout.Width(230));
             GUILayout.Label("SpriteCount", GUILayout.Width(80));
             GUILayout.FlexibleSpace();
+            m_WantOperate = EditorGUILayout.ObjectField(m_WantOperate, typeof(Texture), false) as Texture;
             GUILayout.EndHorizontal();
             m_SceneScroll = GUILayout.BeginScrollView(m_SceneScroll);
             for (int i = 0; i < m_AtlasList.Count; ++i)
@@ -273,9 +268,8 @@ namespace U3dFrameWork.Editor
                 }
                 GUILayout.Label(info.Name, GUILayout.Width(230));
                 GUILayout.Label(info.SpriteCount.ToString(), GUILayout.Width(80));
-                info.WantOperate = EditorGUILayout.ObjectField(info.WantOperate, typeof(Texture), false) as Texture;
                 GUILayout.FlexibleSpace();
-                if (info.WantOperate != null && GUILayout.Button("Add", GUILayout.MaxWidth(60)))
+                if (m_WantOperate != null && GUILayout.Button("Add", GUILayout.MaxWidth(60)))
                 {
                     m_AtlasIndex = i;
                     EditorApplication.update += DoAddTile;
@@ -295,7 +289,7 @@ namespace U3dFrameWork.Editor
                         EditorGUILayout.BeginHorizontal("GameViewBackground");
                         GUILayout.Space(30);
                         GUILayout.Label(info.TileNames[j]);
-                        if (info.WantOperate != null && GUILayout.Button("Replace", GUILayout.MaxWidth(60)))
+                        if (m_WantOperate != null && GUILayout.Button("Replace", GUILayout.MaxWidth(60)))
                         {
                             m_TileName = info.TileNames[j];
                             m_AtlasIndex = i;
@@ -376,11 +370,11 @@ namespace U3dFrameWork.Editor
             }
 
             AtlasInfo info = m_AtlasList[m_AtlasIndex];
-            if (info.WantOperate == null)
+            if (m_WantOperate == null)
             {
                 return;
             }
-            string texpath = AssetDatabase.GetAssetPath(info.WantOperate);
+            string texpath = AssetDatabase.GetAssetPath(m_WantOperate);
             TextureImporter textureImporter = AssetImporter.GetAtPath(texpath) as TextureImporter;
             if (textureImporter == null || textureImporter.textureType != TextureImporterType.Sprite || textureImporter.spriteImportMode != SpriteImportMode.Single)
             {
@@ -419,11 +413,11 @@ namespace U3dFrameWork.Editor
             }
 
             AtlasInfo info = m_AtlasList[m_AtlasIndex];
-            if (info.WantOperate == null)
+            if (m_WantOperate == null)
             {
                 return;
             }
-            string texpath = AssetDatabase.GetAssetPath(info.WantOperate);
+            string texpath = AssetDatabase.GetAssetPath(m_WantOperate);
             TextureImporter textureImporter = AssetImporter.GetAtPath(texpath) as TextureImporter;
             if (textureImporter == null || textureImporter.textureType != TextureImporterType.Sprite || textureImporter.spriteImportMode != SpriteImportMode.Single)
             {
@@ -436,21 +430,20 @@ namespace U3dFrameWork.Editor
             string tile_folder = Path.Combine(path, AtlasTileFolder);
             string atlas_folder = Path.Combine(tile_folder, info.Name);
             string png_file = Path.Combine(path, texpath);
-            string to_file = Path.Combine(atlas_folder, info.WantOperate.name + ".png");
-            if (File.Exists(to_file))
+            string to_file = Path.Combine(atlas_folder, m_WantOperate.name + ".png");
+            if (!File.Exists(to_file))
             {
-                UnityEngine.Debug.LogErrorFormat("The tile({0}) has already in atlas({1}).", info.WantOperate.name, info.Name);
-                return;
+                //添加进来重新打包
+                File.Copy(png_file, to_file);
+                info.LoadTitleNames(tile_folder);
+                PackAtlas(m_TexturePackerPath, info.Name);
             }
-            File.Copy(png_file, to_file);
-            info.LoadTitleNames(tile_folder);
-            PackAtlas(m_TexturePackerPath, info.Name);
-
+            
             //sprite替换
             List<string> prefabs = GetUIPrefabs();
             int count = 0;
             Sprite from = AssetDatabase.LoadAssetAtPath<Sprite>(texpath);
-            Sprite to = GetSprite(info.Name, info.WantOperate.name);
+            Sprite to = GetSprite(info.Name, m_WantOperate.name);
             foreach (string ui in prefabs)
             {
                 if (ReplaceSprite(ui, from, to))
@@ -460,7 +453,7 @@ namespace U3dFrameWork.Editor
             }
 
             AssetDatabase.Refresh();
-            UnityEngine.Debug.LogFormat("Add Atlas:{0} Tile:{1} Modify:{2}", info.Name, info.WantOperate.name, count);
+            UnityEngine.Debug.LogFormat("Add Atlas:{0} Tile:{1} Modify:{2}", info.Name, m_WantOperate.name, count);
             m_AtlasIndex = -1;
         }
 
@@ -517,6 +510,11 @@ namespace U3dFrameWork.Editor
         /// 当前要操作的贴图名称。
         /// </summary>
         private string m_TileName = string.Empty;
+
+        /// <summary>
+        /// 需要操作的图片。
+        /// </summary>
+        public Texture m_WantOperate = null;
 
         /// <summary>
         /// 当前展开索引。
