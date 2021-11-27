@@ -6,6 +6,12 @@ using XX006.Fight;
 
 public class Player : MonoBehaviour
 {
+
+    /// <summary>
+    /// ä¸´æ—¶æµ‹è¯•ã€‚
+    /// </summary>
+    public GameObject FlyingObjectShowTest;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -65,7 +71,7 @@ public class Player : MonoBehaviour
             return false;
         }
 
-        //ÇÐ»»¼¼ÄÜ×´Ì¬£¬´´½¨¼¼ÄÜ¶ÔÏó(Êµ¼ÊÊÇ´ÓÅäÖÃ´´½¨)
+        //åˆ‡æ¢æŠ€èƒ½çŠ¶æ€ï¼Œåˆ›å»ºæŠ€èƒ½å¯¹è±¡(å®žé™…æ˜¯ä»Žé…ç½®åˆ›å»º)
         m_State = 3;
         m_CurSkill = new SkillRunTime();
         m_CurSkill.m_Owner = this;
@@ -96,7 +102,21 @@ public class Player : MonoBehaviour
         }
         else if (id == 3)
         {
+            SkillActionAnimation a_ani = new SkillActionAnimation();
+            a_ani.AniName = "skill03";
+            a_ani.Duration = 1.6f;
+            m_CurSkill.AddAction(a_ani, 0);
 
+            SkillActionFlyingObject a_fo = new SkillActionFlyingObject();
+            a_fo.ShowObject = FlyingObjectShowTest;
+            a_fo.Speed = 10;
+            a_fo.FlyTime = 1;
+            m_CurSkill.AddAction(a_fo, 1);
+
+            //SkillActionChangeBend a_cb = new SkillActionChangeBend();
+            //a_cb.ChangeCurve = new AnimationCurve(new Keyframe(0, 0), new Keyframe(1.0f, 0), new Keyframe(1.1f, 8));
+            //a_cb.Duration = 1.1f;
+            //m_CurSkill.AddAction(a_cb, 0);
         }
         return true;
     }
@@ -153,7 +173,7 @@ public class Player : MonoBehaviour
             }
         }
 
-        //ÒÆ³ýµôÒÑ½áÊøµÄÐÐÎª
+        //ç§»é™¤æŽ‰å·²ç»“æŸçš„è¡Œä¸º
         for (int i= s_CacheIndex.Count-1; i>=0; --i)
         {
             m_Actions.RemoveAt(s_CacheIndex[i]);
@@ -174,7 +194,7 @@ public class Player : MonoBehaviour
     private SkillRunTime m_CurSkill = null;
 
     /// <summary>
-    /// ¼¼ÄÜÐÐÎªÁÐ±í¡£
+    /// æŠ€èƒ½è¡Œä¸ºåˆ—è¡¨ã€‚
     /// </summary>
     private List<SkillEffect> m_Actions = new List<SkillEffect>();
 }

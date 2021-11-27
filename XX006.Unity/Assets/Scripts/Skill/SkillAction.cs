@@ -126,4 +126,21 @@ namespace XX006.Fight
 
         public AnimationCurve ChangeCurve = null;
     }
+
+    public class SkillActionFlyingObject : SkillAction
+    {
+        public override void DoAction(Player player)
+        {
+            StraightFlyingObject fly_obj = new StraightFlyingObject();
+            fly_obj.Direction = player.transform.forward;
+            fly_obj.Speed = Speed;
+            fly_obj.Start(player.transform.position, FlyTime, ShowObject != null ? GameObject.Instantiate(ShowObject) : null);
+        }
+
+        public GameObject ShowObject = null;
+
+        public float Speed = 1;
+
+        public float FlyTime = 1;
+    }
 }
