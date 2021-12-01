@@ -43,24 +43,14 @@ public class GetGrassHeight : MonoBehaviour
 
     private float m_Wind = 0;
 
-    private GrassManager m_GrassManager = new GrassManager();
-
-
     void Start()
     {
-        GrassChunk.ViewFrustumCulling = ViewFrustumCulling;
-        //GrassChunk.HizMipmapMat = HizmipmapMat;
+        GrassManager.Instance.CullingCompute = ViewFrustumCulling;
+        GrassManager.Instance.WindNoise = WindNoise;
         HizManager.Instance.MipmapMat = HizmipmapMat;
-        GrassChunk.WindNoise = WindNoise;
-        GrassChunk.s_RoleTargetCount = RoleTargets == null ? 0 : Mathf.Min(RoleTargets.Length, GrassChunk.s_RoleTargets.Length);
-        for (int i=0; i< GrassChunk.s_RoleTargetCount; ++i)
-        {
-            GrassChunk.s_RoleTargets[i] = RoleTargets[i];
-        }
-        BuildGrass();
-
         GrassMat.EnableKeyword("SHADOWS_SCREEN");
         GrassMat.EnableKeyword("SHADOWS_DEPTH");
+        BuildGrass();
     }
 
     public void BuildGrass()
@@ -76,10 +66,8 @@ public class GetGrassHeight : MonoBehaviour
         TerrainData td = Ground.terrainData;
         Vector3 mypos = transform.position;
         int n = 0;
-        float min_h = 0;
-        float max_h = 0;
 
-        Dictionary<int, List<Matrix4x4>> id_chunk = new Dictionary<int, List<Matrix4x4>>();
+        Dictionary<int, GrassChunkInfo> id_chunk = new Dictionary<int, GrassChunkInfo>();
         for (int i=0; i< row; ++i)
         {
             int ia = Mathf.Min(i * SplitChunk / row, SplitChunk - 1);
@@ -100,36 +88,26 @@ public class GetGrassHeight : MonoBehaviour
                     Matrix4x4 trs = Matrix4x4.TRS(pos, q, new Vector3(rx, ry, 1));
                     ++n;
 
-                    if (n == 1)
-                    {
-                        min_h = max_h = ry;
-                    }
-                    else
-                    {
-                        min_h = Mathf.Min(min_h, ry);
-                        max_h = Mathf.Max(max_h, ry);
-                    }
-
-
-                    List<Matrix4x4> trs_list;
+                    GrassChunkInfo info;
                     int id = ia * 10 + ja;
-                    if (!id_chunk.TryGetValue(id, out trs_list))
+                    if (!id_chunk.TryGetValue(id, out info))
                     {
-                        trs_list = new List<Matrix4x4>();
-                        id_chunk.Add(id, trs_list);
+                        info = new GrassChunkInfo(id);
+                        id_chunk.Add(info.ID, info);
                     }
-                    trs_list.Add(trs);
+                    info.AddGrass(trs);
                 }                
             }
         }
 
-        Log.Info("GrassCount:{0} minh:{1} maxh:{2} chunk:{3}-{4}", n, min_h, max_h, id_chunk.Count, n/id_chunk.Count);
+        Log.Info("GrassCount:{0} chunk:{1}-{2}", n, id_chunk.Count, n/id_chunk.Count);
         GrassMat.SetVector("_Move", new Vector4(WindDir.x, WindDir.y, WindDir.z, 0));
         foreach (var kvp in id_chunk)
         {
-            GrassChunk chunk = m_GrassManager.GetOrCreateChunk(kvp.Key);
-            chunk.AddGrass(kvp.Value);
-            chunk.GrassMat = new Material(GrassMat);
+            GrassChunk chunk = new GrassChunk();
+            Material mat = new Material(GrassMat);
+            chunk.Init(kvp.Value, GrassMesh, mat);            
+            GrassManager.Instance.AddGrass(chunk.ChunkInfo.ID, chunk);
         }
     }
 
@@ -139,13 +117,8 @@ public class GetGrassHeight : MonoBehaviour
         if (GrassMesh != null && GrassMat != null)
         {
             m_Wind += Time.deltaTime * WindSpeed;
-            m_GrassManager.DrawGrass(m_Wind, WindGap, this.transform.forward, GrassMesh, 0, camera);
+            GrassManager.Instance.DrawGrass(m_Wind, WindGap, this.transform.forward, camera);
         }
-    }
-
-    private void OnDestroy()
-    {
-        m_GrassManager.Release();
     }
 
     public void OnValidate()

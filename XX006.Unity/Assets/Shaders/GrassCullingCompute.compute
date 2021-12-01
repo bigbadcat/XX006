@@ -1,5 +1,5 @@
 // Each #kernel tells which function to compile; you can have many kernels
-#pragma kernel CSMain
+#pragma kernel CSGrassCullingHeight
 
 #include "UnityCG.cginc"
 
@@ -21,8 +21,8 @@ float4 _WindDir;        //w=sqrt(AA+BB+CC)
 Texture2D _WindNoise;
 
 
-uint _RoleCount;
-float4 _RoleInfos[8];
+uint _BendCount;
+float4 _BendInfos[8];
 float _BendDelta;
 RWStructuredBuffer<float4> _BendBuffer;
 
@@ -121,9 +121,9 @@ float4 GetWind(float3 pos)
 float4 GetBend(float3 pos)
 {
     float4 bend_dir = float4(0, 0, 0, 0);
-    for (uint i=0; i<_RoleCount; ++i)
+    for (uint i=0; i<_BendCount; ++i)
     {
-        float4 ri = _RoleInfos[i];
+        float4 ri = _BendInfos[i];
         float3 dir = pos - ri.xyz;
         float bend_max = 1.0 * ri.w;
         float bend_min = 0.5 * ri.w;
@@ -145,20 +145,15 @@ float4 GetBend(float3 pos)
 }
 
 [numthreads(512, 1, 1)]
-void CSMain (uint3 id : SV_DispatchThreadID)
+void CSGrassCullingHeight (uint3 id : SV_DispatchThreadID)
 {
     if(id.x >= _InstanceCount)
     {
         return;
     }
 
-    float4x4 trs = _InstancingBuffer[id.x];
-    //if (IsCulling(trs))
-    //{
-    //    return;
-    //}
-
     //only view frushtum culling for mobile is faster
+    float4x4 trs = _InstancingBuffer[id.x];
     bool in_clip = false;
     float4 bend = _BendBuffer[id.x];
     float4x4 mvpMatrix = mul(_CameraVPMatrix, trs);

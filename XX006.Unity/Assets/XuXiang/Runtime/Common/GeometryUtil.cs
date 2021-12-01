@@ -114,6 +114,37 @@ namespace XuXiang
         }
 
         /// <summary>
+        /// 判断两个凸多面体是否相交。
+        /// </summary>
+        /// <param name="points">凸面体A的顶点列表。</param>
+        /// <param name="planes">凸面体B的面列表。(法线指向外侧)</param>
+        /// <returns></returns>
+        public static bool IsIntersect(Vector4[] points, Vector4[] planes)
+        {
+            bool show = true;
+            for (int i = 0; i < planes.Length && show; ++i)
+            {
+                int out_count = 0;
+                for (int j = 0; j < points.Length; ++j)
+                {
+                    if (IsOutsideThePlane(planes[i], points[j]))
+                    {
+                        ++out_count;
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+                if (out_count == points.Length)
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        /// <summary>
         /// 获取边框的8个点。
         /// </summary>
         /// <param name="center">边框中心。</param>
