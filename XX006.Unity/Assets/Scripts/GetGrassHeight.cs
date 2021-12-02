@@ -36,8 +36,8 @@ public class GetGrassHeight : MonoBehaviour
         
     public float Distance = 10;
 
-    public Mesh GrassMesh;
-    public Material GrassMat;
+    public Mesh[] GrassMesh;
+    public Material[] GrassMat;
     public ComputeShader ViewFrustumCulling;
     public Material HizmipmapMat;
 
@@ -48,8 +48,12 @@ public class GetGrassHeight : MonoBehaviour
         GrassManager.Instance.CullingCompute = ViewFrustumCulling;
         GrassManager.Instance.WindNoise = WindNoise;
         HizManager.Instance.MipmapMat = HizmipmapMat;
-        GrassMat.EnableKeyword("SHADOWS_SCREEN");
-        GrassMat.EnableKeyword("SHADOWS_DEPTH");
+        for (int i=0; i< GrassMat.Length; ++i)
+        {
+            GrassMat[i].EnableKeyword("SHADOWS_SCREEN");
+            GrassMat[i].EnableKeyword("SHADOWS_DEPTH");
+        }
+        
         BuildGrass();
     }
 
@@ -81,7 +85,7 @@ public class GetGrassHeight : MonoBehaviour
                 mypos.y = pos.y;
                 if ((mypos-pos).sqrMagnitude < Distance * Distance)
                 {
-                    Quaternion q = Quaternion.Euler(0, Random.Range(-90, 90), 0);
+                    Quaternion q = Quaternion.Euler(Random.Range(-10, 10), Random.Range(-90, 90), Random.Range(-10, 10));
                     float rx = Random.Range(0.1f, 0.15f);
                     float ry = (float)System.Math.Sqrt((-2) * System.Math.Log(Random.Range(0, 1.0f), System.Math.E)) / 5;       //高度按标准正态分布随机
                     ry = 0.5f + ry * 1.5f;
@@ -101,12 +105,16 @@ public class GetGrassHeight : MonoBehaviour
         }
 
         Log.Info("GrassCount:{0} chunk:{1}-{2}", n, id_chunk.Count, n/id_chunk.Count);
-        GrassMat.SetVector("_Move", new Vector4(WindDir.x, WindDir.y, WindDir.z, 0));
         foreach (var kvp in id_chunk)
         {
+            Material[] mats = new Material[GrassMat.Length];
+            for (int i = 0; i < GrassMat.Length; ++i)
+            {
+                mats[i] = new Material(GrassMat[i]);
+            }
+
             GrassChunk chunk = new GrassChunk();
-            Material mat = new Material(GrassMat);
-            chunk.Init(kvp.Value, GrassMesh, mat);            
+            chunk.Init(kvp.Value, GrassMesh, mats);            
             GrassManager.Instance.AddGrass(chunk.ChunkInfo.ID, chunk);
         }
     }
@@ -119,13 +127,5 @@ public class GetGrassHeight : MonoBehaviour
             m_Wind += Time.deltaTime * WindSpeed;
             GrassManager.Instance.DrawGrass(m_Wind, WindGap, this.transform.forward, camera);
         }
-    }
-
-    public void OnValidate()
-    {
-        if (GrassMat != null)
-        {
-            GrassMat.SetVector("_Move", new Vector4(WindDir.x, WindDir.y, WindDir.z, 0));
-        }        
     }
 }

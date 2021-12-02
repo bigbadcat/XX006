@@ -1,5 +1,8 @@
 // Each #kernel tells which function to compile; you can have many kernels
 #pragma kernel CSGrassCullingHeight
+#pragma kernel CSGrassCullingMiddle
+#pragma kernel CSGrassCullingLow
+#pragma kernel CSGrassCullingStatic
 
 #include "UnityCG.cginc"
 
@@ -9,6 +12,13 @@ struct instancing_data
     float4 wind;
     float4 bend;
 };
+
+struct instancing_data_12
+{
+    float4x4 trs;
+    float4 wind;
+};
+
 
 float4 _CameraPlanes[6];
 float4x4 _CameraVPMatrix;         //camera vp matrix.
@@ -29,12 +39,14 @@ RWStructuredBuffer<float4> _BendBuffer;
 uint _InstanceCount;
 StructuredBuffer<float4x4> _InstancingBuffer;
 AppendStructuredBuffer<instancing_data> _CullResult;
+AppendStructuredBuffer<instancing_data_12> _CullResult12;
+AppendStructuredBuffer<float4x4> _CullResult3;
 
 inline bool IsInClipSpace(float4 clip_pos)
 {
     return clip_pos.x > -clip_pos.w && clip_pos.x < clip_pos.w
     && clip_pos.y > -clip_pos.w && clip_pos.y < clip_pos.w
-    && clip_pos.z > 0.5 && clip_pos.z < clip_pos.w;
+    && clip_pos.z > 0 && clip_pos.z < clip_pos.w;
 }
 
 bool IsCulling(float4x4 trs)
@@ -192,4 +204,89 @@ void CSGrassCullingHeight (uint3 id : SV_DispatchThreadID)
     data.wind = wind;
     data.bend = new_bend;
     _CullResult.Append(data);
+}
+
+[numthreads(512, 1, 1)]
+void CSGrassCullingMiddle (uint3 id : SV_DispatchThreadID)
+{
+    if(id.x >= _InstanceCount)
+    {
+        return;
+    }
+
+    //only view frushtum culling for mobile is faster
+    float4x4 trs = _InstancingBuffer[id.x];
+    bool in_clip = false;
+    float4x4 mvpMatrix = mul(_CameraVPMatrix, trs);
+    for (int i = 0; i < 8 && !in_clip; i++)
+    {
+        float4 cp = mul(mvpMatrix, _BoundPoints[i]);
+        in_clip = IsInClipSpace(cp);
+    }
+    if (!in_clip)
+    {
+        return;
+    }
+
+    //compute wind
+    float3 pos = trs._14_24_34;        //_14_24_34 = position
+    instancing_data_12 data;
+    data.trs = trs;
+    data.wind = GetWind(pos);
+    _CullResult12.Append(data);
+}
+
+[numthreads(512, 1, 1)]
+void CSGrassCullingLow (uint3 id : SV_DispatchThreadID)
+{
+    if(id.x >= _InstanceCount)
+    {
+        return;
+    }
+
+    //only view frushtum culling for mobile is faster
+    float4x4 trs = _InstancingBuffer[id.x];
+    bool in_clip = false;
+    float4x4 mvpMatrix = mul(_CameraVPMatrix, trs);
+    for (int i = 0; i < 8 && !in_clip; i++)
+    {
+        float4 cp = mul(mvpMatrix, _BoundPoints[i]);
+        in_clip = IsInClipSpace(cp);
+    }
+    if (!in_clip)
+    {
+        return;
+    }
+
+    //compute wind
+    float3 pos = trs._14_24_34;        //_14_24_34 = position
+    instancing_data_12 data;
+    data.trs = trs;
+    data.wind = GetWind(pos);
+    _CullResult12.Append(data);
+}
+
+[numthreads(512, 1, 1)]
+void CSGrassCullingStatic (uint3 id : SV_DispatchThreadID)
+{
+    if(id.x >= _InstanceCount)
+    {
+        return;
+    }
+
+    //only view frushtum culling for mobile is faster
+    float4x4 trs = _InstancingBuffer[id.x];
+    bool in_clip = false;
+    float4x4 mvpMatrix = mul(_CameraVPMatrix, trs);
+    for (int i = 0; i < 8 && !in_clip; i++)
+    {
+        float4 cp = mul(mvpMatrix, _BoundPoints[i]);
+        in_clip = IsInClipSpace(cp);
+    }
+    if (!in_clip)
+    {
+        return;
+    }
+
+    _CullResult3.Append(trs);
 }

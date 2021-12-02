@@ -38,7 +38,7 @@ namespace XX006
             }
             m_TRSDatas.Add(trs);            
             GeometryUtil.GetBoundPointsForAABB(m_MinPos, m_MaxPos, m_BoundPoints);
-            m_Radius = Size.sqrMagnitude / 2;
+            m_Radius = Size.magnitude / 2;
         }
 
         /// <summary>
@@ -63,7 +63,7 @@ namespace XX006
                 UpdateAABB(m_TRSDatas[i]);
             }
             GeometryUtil.GetBoundPointsForAABB(m_MinPos, m_MaxPos, m_BoundPoints);
-            m_Radius = Size.sqrMagnitude / 2;
+            m_Radius = Size.magnitude / 2;
         }
 
         #endregion
@@ -217,7 +217,7 @@ namespace XX006
         /// <param name="info">草快信息。</param>
         /// <param name="mesh">草网格。</param>
         /// <param name="mat">草材质。</param>
-        public void Init(GrassChunkInfo info, Mesh mesh, Material mat)
+        public void Init(GrassChunkInfo info, Mesh[] mesh, Material[] mat)
         {
             m_ChunkInfo = info;
             m_GrassMesh = mesh;
@@ -227,33 +227,41 @@ namespace XX006
         /// <summary>
         /// 绘制草快。
         /// </summary>
-        public void DrawGrass()
+        /// <param name="lod">细节层级。</param>
+        public void DrawGrass(int lod)
         {
             if (m_BufferCount != m_ChunkInfo.TRSDatas.Count)
             {
-                UpdateBuffers();
-                UpdateArgs(m_GrassMesh);
+                UpdateBuffers();                
             }
             if (m_BufferCount <= 0)
             {
                 return;
             }
+            if (m_CurLOD != lod)
+            {
+                UpdateLOD(lod);
+            }
 
             //剔除、风和压弯计算
             ComputeShader cs_culling = GrassManager.Instance.CullingCompute;
-            int kernel = GrassManager.Instance.CullingKernel;
+            int kernel = GrassManager.Instance.CullingKernel[lod];
             m_CullResult.SetCounterValue(0);
             cs_culling.SetInt(s_PID_InstanceCount, m_BufferCount);
             cs_culling.SetBuffer(kernel, s_PID_InstanceBuffer, m_TRSBuffer);
-            cs_culling.SetBuffer(kernel, s_PID_BendBuffer, m_BendBuffer);
-            cs_culling.SetBuffer(kernel, s_PID_CullResult, m_CullResult);
+            if (m_CurLOD == 0)
+            {
+                cs_culling.SetBuffer(kernel, s_PID_BendBuffer, m_BendBuffer);
+            }
+            cs_culling.SetBuffer(kernel, s_PID_LOD_CullResult[lod], m_CullResult);
             cs_culling.Dispatch(kernel, (int)Mathf.Ceil(m_BufferCount / 512.0f), 1, 1);
 
             //绘制
             int layer = GrassManager.Instance.GrassLayer;
             ComputeBuffer.CopyCount(m_CullResult, m_ArgsBuffer, sizeof(uint));
-            m_GrassMat.SetBuffer(s_PID_InstanceBuffer, m_CullResult);
-            Graphics.DrawMeshInstancedIndirect(m_GrassMesh, 0, m_GrassMat, m_ChunkInfo.Border, m_ArgsBuffer, 0, null, ShadowCastingMode.On, true, layer);
+            ShadowCastingMode scm = m_CurLOD <= 2 ? ShadowCastingMode.On : ShadowCastingMode.Off;
+            m_GrassMat[lod].SetBuffer(s_PID_InstanceBuffer, m_CullResult);
+            Graphics.DrawMeshInstancedIndirect(m_GrassMesh[lod], 0, m_GrassMat[lod], m_ChunkInfo.Border, m_ArgsBuffer, 0, null, scm, true, layer);
         }
 
         /// <summary>
@@ -270,7 +278,10 @@ namespace XX006
             m_ArgsBuffer?.Release();
             m_ArgsBuffer = null;
             m_BufferCount = 0;
-            GameObject.Destroy(m_GrassMat);
+            for (int i = 0; i < m_GrassMat.Length; ++i)
+            {
+                GameObject.Destroy(m_GrassMat[i]);
+            }
             m_GrassMat = null;
         }
 
@@ -289,7 +300,7 @@ namespace XX006
         /// <summary>
         /// 获取草网格。
         /// </summary>
-        public Mesh GrassMesh
+        public Mesh[] GrassMesh
         {
             get { return m_GrassMesh; }
         }
@@ -297,7 +308,7 @@ namespace XX006
         /// <summary>
         /// 获取草材质。
         /// </summary>
-        public Material GrassMat
+        public Material[] GrassMat
         {
             get { return m_GrassMat; }
         }
@@ -314,7 +325,10 @@ namespace XX006
             s_PID_InstanceCount = Shader.PropertyToID("_InstanceCount");
             s_PID_InstanceBuffer = Shader.PropertyToID("_InstancingBuffer");
             s_PID_BendBuffer = Shader.PropertyToID("_BendBuffer");
-            s_PID_CullResult = Shader.PropertyToID("_CullResult");
+            s_PID_LOD_CullResult[0] = Shader.PropertyToID("_CullResult");
+            s_PID_LOD_CullResult[1] = Shader.PropertyToID("_CullResult12");
+            s_PID_LOD_CullResult[2] = Shader.PropertyToID("_CullResult12");
+            s_PID_LOD_CullResult[3] = Shader.PropertyToID("_CullResult3");
         }
 
         /// <summary>
@@ -326,8 +340,7 @@ namespace XX006
             m_TRSBuffer = null;
             m_BendBuffer?.Release();
             m_BendBuffer = null;
-            m_CullResult?.Release();
-            m_CullResult = null;
+            
 
             m_BufferCount = m_ChunkInfo.TRSDatas.Count;
             m_TRSBuffer = new ComputeBuffer(m_BufferCount, sizeof(float) * 16);
@@ -336,15 +349,17 @@ namespace XX006
             Vector4[] bend_buff = new Vector4[m_BufferCount];
             m_BendBuffer = new ComputeBuffer(m_BufferCount, sizeof(float) * 4);
             m_BendBuffer.SetData(bend_buff);
-            m_CullResult = new ComputeBuffer(m_BufferCount, sizeof(float) * (16 + 8), ComputeBufferType.Append);
+            UpdateCullResult();
         }
 
         /// <summary>
         /// 更新绘制参数。
         /// </summary>
-        /// <param name="mesh"></param>
-        private void UpdateArgs(Mesh mesh)
+        /// <param name="lod">细节层级。</param>
+        private void UpdateLOD(int lod)
         {
+            Mesh mesh = m_GrassMesh[lod];
+            m_CurLOD = lod;
             if (m_ArgsBuffer == null)
             {
                 m_ArgsBuffer = new ComputeBuffer(1, s_CacheArgs.Length * sizeof(uint), ComputeBufferType.IndirectArguments);
@@ -354,6 +369,22 @@ namespace XX006
             s_CacheArgs[2] = (uint)mesh.GetIndexStart(0);
             s_CacheArgs[3] = (uint)mesh.GetBaseVertex(0);
             m_ArgsBuffer.SetData(s_CacheArgs);
+            UpdateCullResult();
+        }
+
+        /// <summary>
+        /// 更新剔除结果缓冲区。
+        /// </summary>
+        private void UpdateCullResult()
+        {
+            if (m_BufferCount <= 0 || m_CurLOD < 0)
+            {
+                return;
+            }
+
+            m_CullResult?.Release();
+            m_CullResult = null;
+            m_CullResult = new ComputeBuffer(m_BufferCount, sizeof(float) * s_LOD_INSTANCING_SIZE[m_CurLOD], ComputeBufferType.Append);
         }
 
         #endregion
@@ -365,7 +396,7 @@ namespace XX006
         private static int s_PID_InstanceCount = 0;
         private static int s_PID_InstanceBuffer = 0;
         private static int s_PID_BendBuffer = 0;
-        private static int s_PID_CullResult = 0;
+        private static int[] s_PID_LOD_CullResult = new int[4];
 
         #endregion
 
@@ -375,6 +406,11 @@ namespace XX006
         private static uint[] s_CacheArgs = new uint[5] { 0, 0, 0, 0, 0 };
 
         /// <summary>
+        /// 草实例不同LOD的数据大小。
+        /// </summary>
+        private static int[] s_LOD_INSTANCING_SIZE = new int[4] {24, 20, 20, 16 };
+
+        /// <summary>
         /// 草快信息。
         /// </summary>
         private GrassChunkInfo m_ChunkInfo = null;
@@ -382,12 +418,12 @@ namespace XX006
         /// <summary>
         /// 草网格。
         /// </summary>
-        private Mesh m_GrassMesh = null;
+        private Mesh[] m_GrassMesh = null;
 
         /// <summary>
         /// 草快材质。
         /// </summary>
-        private Material m_GrassMat = null;
+        private Material[] m_GrassMat = null;
 
         /// <summary>
         /// 缓冲区对应的实例数量。
@@ -408,6 +444,11 @@ namespace XX006
         /// 剔除结果缓冲区。(最终要绘制的实例数据)
         /// </summary>
         private ComputeBuffer m_CullResult;
+
+        /// <summary>
+        /// 当前LOD。
+        /// </summary>
+        private int m_CurLOD = -1;
 
         /// <summary>
         /// 绘制参数缓冲区。

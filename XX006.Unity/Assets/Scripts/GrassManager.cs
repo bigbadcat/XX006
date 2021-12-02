@@ -125,8 +125,7 @@ namespace XX006
             Vector4 wdir = new Vector4(dir.x, dir.y, dir.z, fm);
             m_CullingCompute.SetFloat(m_PID_Wind, wind);
             m_CullingCompute.SetFloat(m_PID_WindGap, gap);
-            m_CullingCompute.SetVector(m_PID_WindDir, wdir);
-            m_CullingCompute.SetTexture(m_CullingKernel, m_PID_WindNoise, m_WindNoise);
+            m_CullingCompute.SetVector(m_PID_WindDir, wdir);            
 
             //设置压弯参数
             UpdateBendInfo();
@@ -135,12 +134,17 @@ namespace XX006
             m_CullingCompute.SetVectorArray("_BendInfos", m_BendInfos);
 
             //CPU层队草快级别(量小)的视锥剔除后再队草块进行绘制
+            Vector3 vpos = camera.transform.position;
             GeometryUtil.GetFrustumPlane(camera, m_CacheFrustumPlanes);
             foreach (var kvp in m_GrassChunks)
             {
                 if (GeometryUtil.IsIntersect(kvp.Value.ChunkInfo.BoundPoints, m_CacheFrustumPlanes))
                 {
-                    kvp.Value.DrawGrass();
+                    int lod = GetLOD(vpos, kvp.Value);
+                    if (m_LODVisibleSwitchs[lod])
+                    {
+                        kvp.Value.DrawGrass(lod);
+                    }                    
                 }
             }
         }
@@ -168,11 +172,17 @@ namespace XX006
                 m_CullingCompute = value;
                 if (m_CullingCompute != null)
                 {
-                    m_CullingKernel = m_CullingCompute.FindKernel("CSGrassCullingHeight");
+                    m_CullingKernel[0] = m_CullingCompute.FindKernel("CSGrassCullingHeight");
+                    m_CullingKernel[1] = m_CullingCompute.FindKernel("CSGrassCullingMiddle");
+                    m_CullingKernel[2] = m_CullingCompute.FindKernel("CSGrassCullingLow");
+                    m_CullingKernel[3] = m_CullingCompute.FindKernel("CSGrassCullingStatic");
                 }
                 else
                 {
-                    m_CullingKernel = 0;
+                    m_CullingKernel[0] = 0;
+                    m_CullingKernel[1] = 0;
+                    m_CullingKernel[2] = 0;
+                    m_CullingKernel[3] = 0;
                 }
             }
         }
@@ -180,7 +190,7 @@ namespace XX006
         /// <summary>
         /// 获取计算核心标识。
         /// </summary>
-        public int CullingKernel
+        public int[] CullingKernel
         {
             get { return m_CullingKernel; }
         }
@@ -199,7 +209,14 @@ namespace XX006
         public Texture WindNoise
         {
             get { return m_WindNoise; }
-            set { m_WindNoise = value; }
+            set 
+            { 
+                m_WindNoise = value;
+                m_CullingCompute.SetTexture(m_CullingKernel[0], m_PID_WindNoise, m_WindNoise);
+                m_CullingCompute.SetTexture(m_CullingKernel[1], m_PID_WindNoise, m_WindNoise);
+                m_CullingCompute.SetTexture(m_CullingKernel[2], m_PID_WindNoise, m_WindNoise);
+                m_CullingCompute.SetTexture(m_CullingKernel[3], m_PID_WindNoise, m_WindNoise);
+            }
         }
 
         #endregion
@@ -217,6 +234,26 @@ namespace XX006
             {
                 m_BendInfos[i] = bend_areas[i].Info;
             }
+        }
+
+        /// <summary>
+        /// 获取草块的LOD。
+        /// </summary>
+        /// <param name="vpos">视野位置。</param>
+        /// <param name="chunk">草块对象。</param>
+        /// <returns>LOD值。</returns>
+        private int GetLOD(Vector3 vpos, GrassChunk chunk)
+        {
+            float sqrt_dis = (vpos - chunk.ChunkInfo.Center).sqrMagnitude;
+            for (int i=0; i<m_LODDistances.Length; ++i)
+            {
+                float ck = m_LODDistances[i] + chunk.ChunkInfo.Radius;
+                if (sqrt_dis < ck * ck)
+                {
+                    return i;
+                }
+            }
+            return m_LODDistances.Length;
         }
 
         #endregion
@@ -242,7 +279,7 @@ namespace XX006
         /// <summary>
         /// 计算核心标识。
         /// </summary>
-        private int m_CullingKernel = 0;
+        private int[] m_CullingKernel = new int[] { 0, 0, 0, 0};
 
         /// <summary>
         /// 草Layer。
@@ -278,6 +315,18 @@ namespace XX006
         /// 当前的草快信息。
         /// </summary>
         private Dictionary<int, GrassChunk> m_GrassChunks = new Dictionary<int, GrassChunk>();
+
+        /// <summary>
+        /// LOD的距离判定。
+        /// </summary>
+        [SerializeField]
+        private float[] m_LODDistances = new float[] { 10, 20, 40 };
+
+        /// <summary>
+        /// LOD显示开关。
+        /// </summary>
+        [SerializeField]
+        private bool[] m_LODVisibleSwitchs = new bool[] { true, true, true, true};
 
         #endregion
     }

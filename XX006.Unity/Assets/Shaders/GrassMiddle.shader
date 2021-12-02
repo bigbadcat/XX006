@@ -1,6 +1,3 @@
-//
-//绘制草的shader，需要配合DrawMeshInstancedIndirect传入_InstancingBuffer一起才能正常使用
-//
 Shader "Unlit/GrassMiddle"
 {
     Properties
@@ -23,10 +20,12 @@ Shader "Unlit/GrassMiddle"
         Pass
         {
             CGPROGRAM
+            #pragma target 3.0
             #pragma vertex vert
             #pragma fragment frag
             #pragma multi_compile_fwdbase
             #pragma multi_compile_instancing
+            #pragma instancing_options procedural:setup
 
             #include "UnityCG.cginc"
             #include "Lighting.cginc"
@@ -35,7 +34,8 @@ Shader "Unlit/GrassMiddle"
             struct instancing_data
             {
                 float4x4 trs;
-                float rate;
+                float4 wind;
+                //float4 bend;
             };
 
             struct appdata
@@ -43,6 +43,7 @@ Shader "Unlit/GrassMiddle"
                 float4 vertex : POSITION;
                 float2 uv : TEXCOORD0;
                 float3 normal : NORMAL;
+                UNITY_VERTEX_INPUT_INSTANCE_ID
             };
 
             struct v2f
@@ -50,7 +51,8 @@ Shader "Unlit/GrassMiddle"
                 float2 uv : TEXCOORD0;
                 float4 vertex : SV_POSITION;
                 SHADOW_COORDS(2)            // 2 即 TEXCOORD2
-                fixed4 diffuse : TEXCOORD3;
+                float3 normal : NORMAL;
+                float3 vertex_world : TEXCOORD3;    
             };
 
             sampler2D _MainTex;
@@ -61,27 +63,31 @@ Shader "Unlit/GrassMiddle"
 
             StructuredBuffer<instancing_data> _InstancingBuffer;
 
-            v2f vert (appdata v, uint instanceID : SV_InstanceID)
+            void setup()
+            {
+            #if defined(UNITY_INSTANCING_ENABLED) || defined(UNITY_PROCEDURAL_INSTANCING_ENABLED) || defined(UNITY_STEREO_INSTANCING_ENABLED)
+                instancing_data data = _InstancingBuffer[unity_InstanceID];
+                unity_ObjectToWorld = data.trs;
+            #endif
+            }
+
+            v2f vert (appdata v)
             {
                 v2f o;
-                float move_rate = _MoveRate;
-                instancing_data data = _InstancingBuffer[instanceID];
-                unity_ObjectToWorld = data.trs;
-                move_rate = data.rate;
+                UNITY_SETUP_INSTANCE_ID(v);
+            #if defined(UNITY_INSTANCING_ENABLED) || defined(UNITY_PROCEDURAL_INSTANCING_ENABLED) || defined(UNITY_STEREO_INSTANCING_ENABLED)
+                instancing_data data = _InstancingBuffer[unity_InstanceID];
+                float4 wind = data.wind;
+            #else
+                float4 wind = float4(_Move.xyz, _MoveRate);
+            #endif
 
                 float4 vw = mul(unity_ObjectToWorld, v.vertex);
-                float3 wpos = vw + (_Move * v.vertex.y * v.vertex.y) * move_rate;
+                float3 wpos = vw + (wind.xyz * v.vertex.y * v.vertex.y) * wind.w;
                 o.vertex = UnityWorldToClipPos(float4(wpos, 1));
                 o.uv = v.uv;
-
-                //漫反射，背面没有裁剪，法线是反方向
-                //导致背面对着光源也不会接受光照
-                //但在随机生成的草丛里，能得到更好的效果
-                //阳光下的草地不会因为观察朝向光影时有类似背光效果(草整体变暗)
-				float3 worldLightDir = normalize(UnityWorldSpaceLightDir(wpos));
-                float3 normal = normalize(mul(unity_ObjectToWorld, v.normal));
-				float rate = saturate(dot(normal, worldLightDir));
-				o.diffuse = float4(_LightColor0.rgb * rate, rate);
+                o.normal = normalize(mul(unity_ObjectToWorld, v.normal));
+                o.vertex_world = wpos;
 
                 //阴影
                 TRANSFER_SHADOW(o);
@@ -93,16 +99,20 @@ Shader "Unlit/GrassMiddle"
                 fixed4 col = tex2D(_MainTex, i.uv);
                 clip(col.a - _ClipAlpha);
 
-                fixed3 _tex_color = col * _Color;
-
-                //环境光
+                //环境光                
+                fixed3 _tex_color = col.rgb * _Color;
 				fixed3 ambient = UNITY_LIGHTMODEL_AMBIENT.xyz * _tex_color;
 
-                //漫反射				
-				fixed3 diffuse = i.diffuse.rgb * _tex_color;
+                //漫反射，背面没有裁剪，法线是反方向
+                //导致背面对着光源也不会接受光照
+                //但在随机生成的草丛里，能得到更好的效果
+                //阳光下的草地不会因为观察朝向光影时有类似背光效果(草整体变暗)
+				float3 worldLightDir = normalize(UnityWorldSpaceLightDir(i.vertex_world));
+				float rate = saturate(dot(i.normal, worldLightDir));
+				fixed3 diffuse = _LightColor0.rgb * _tex_color * rate;
 
                 //阴影
-                fixed atten = SHADOW_ATTENUATION(i) * i.diffuse.a;         //乘以漫反射系数，可以让阴影只影响向阳面(背阳面系数为0)
+                fixed atten = SHADOW_ATTENUATION(i) * rate;         //乘以漫反射系数，可以让阴影只影响向阳面(背阳面系数为0)
                 return float4(ambient + diffuse * atten, 1);
             }
             ENDCG
@@ -118,13 +128,14 @@ Shader "Unlit/GrassMiddle"
 			#pragma fragment fragShadow
 			#pragma multi_compile_shadowcaster
             #pragma multi_compile_instancing
+            #pragma instancing_options procedural:setup
 
 			#include "UnityCG.cginc"
 
             struct instancing_data
             {
                 float4x4 trs;
-                float rate;
+                float4 wind;
             };
 
             struct appdata
@@ -132,6 +143,7 @@ Shader "Unlit/GrassMiddle"
                 float4 vertex : POSITION;
                 float2 texcoord : TEXCOORD0;
                 float3 normal : NORMAL;
+                UNITY_VERTEX_INPUT_INSTANCE_ID
             };
 
 			struct v2fShadow {
@@ -145,6 +157,14 @@ Shader "Unlit/GrassMiddle"
             float _MoveRate;
 
             StructuredBuffer<instancing_data> _InstancingBuffer;
+
+            void setup()
+            {
+            #if defined(UNITY_INSTANCING_ENABLED) || defined(UNITY_PROCEDURAL_INSTANCING_ENABLED) || defined(UNITY_STEREO_INSTANCING_ENABLED)
+                instancing_data data = _InstancingBuffer[unity_InstanceID];
+                unity_ObjectToWorld = data.trs;
+            #endif
+            }
 
             //自定义UnityApplyLinearShadowBias，不使用摄像机的Bias，而是固定使用0
             //以为草是贴着地面的面，摄像机的Bias会造成阴影与投影模型有一定分离，造成接地部分不连接，产生光亮的缝隙
@@ -172,13 +192,16 @@ Shader "Unlit/GrassMiddle"
 			v2fShadow vertShadow(appdata v, uint instanceID : SV_InstanceID)
             {
 				v2fShadow o;
-                float move_rate = _MoveRate;
-                instancing_data data = _InstancingBuffer[instanceID];
-                unity_ObjectToWorld = data.trs;
-                move_rate = data.rate;
+                UNITY_SETUP_INSTANCE_ID(v);
+            #if defined(UNITY_INSTANCING_ENABLED) || defined(UNITY_PROCEDURAL_INSTANCING_ENABLED) || defined(UNITY_STEREO_INSTANCING_ENABLED)
+                instancing_data data = _InstancingBuffer[v.instanceID];
+                float4 wind = data.wind;
+            #else
+                float4 wind = float4(_Move.xyz, _MoveRate);
+            #endif
 
                 float4 vw = mul(unity_ObjectToWorld, v.vertex);
-                float3 wpos = vw + (_Move * v.vertex.y * v.vertex.y) * move_rate;
+                float3 wpos = vw + (wind.xyz * v.vertex.y * v.vertex.y) * wind.w;
                 
                 //重写官方TRANSFER_SHADOW_CASTER_NORMALOFFSET的宏和相关函数
                 //主要是变换矩阵通过data.trs获得，官方代码中的模型空间与世界空间的相关变换都无效了
