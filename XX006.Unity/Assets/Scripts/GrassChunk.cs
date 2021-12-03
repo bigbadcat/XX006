@@ -382,9 +382,16 @@ namespace XX006
                 return;
             }
 
+            //判断释放需要重建Buffer
+            int stride = s_LOD_INSTANCING_SIZE[m_CurLOD];
+            if (m_CullResult != null && m_CullResult.count == m_BufferCount && m_CullResult.stride == stride)
+            {
+                return;
+            }
+
             m_CullResult?.Release();
             m_CullResult = null;
-            m_CullResult = new ComputeBuffer(m_BufferCount, sizeof(float) * s_LOD_INSTANCING_SIZE[m_CurLOD], ComputeBufferType.Append);
+            m_CullResult = new ComputeBuffer(m_BufferCount, sizeof(float) * stride, ComputeBufferType.Append);
         }
 
         #endregion
