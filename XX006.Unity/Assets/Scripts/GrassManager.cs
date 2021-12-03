@@ -256,7 +256,31 @@ namespace XX006
             return m_LODDistances.Length;
         }
 
-        #endregion
+#if UNITY_EDITOR
+
+        /// <summary>
+        /// 获取草块。
+        /// </summary>
+        private void OnDrawGizmos()
+        {
+            if (m_DrawChunkBox)
+            {
+                foreach (var kvp in m_GrassChunks)
+                {
+                    Gizmos.DrawWireCube(kvp.Value.ChunkInfo.Center, kvp.Value.ChunkInfo.Size);
+                }
+            }
+        }
+
+        /// <summary>
+        /// 是否显示草方块盒子。
+        /// </summary>
+        [SerializeField]
+        private bool m_DrawChunkBox = true;
+
+#endif
+
+#endregion
 
         #region 成员变量----------------------------------------------------------------
 

@@ -93,7 +93,7 @@ public class GetGrassHeight : MonoBehaviour
                     ++n;
 
                     GrassChunkInfo info;
-                    int id = ia * 10 + ja;
+                    int id = ia * 1000 + ja;
                     if (!id_chunk.TryGetValue(id, out info))
                     {
                         info = new GrassChunkInfo(id);
