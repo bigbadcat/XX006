@@ -1372,6 +1372,7 @@ GameObject:
   m_Component:
   - component: {fileID: 4072990184239446}
   - component: {fileID: 95060060225587830}
+  - component: {fileID: 4901182648649980980}
   m_Layer: 10
   m_Name: PB_Sword
   m_TagString: Untagged
@@ -1414,6 +1415,19 @@ Animator:
   m_HasTransformHierarchy: 1
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorControllerStateOnDisable: 0
+--- !u!114 &4901182648649980980
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1672537138573532}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 99c042a3c210fb840b60be5594023967, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_AnimationFolder: 
 --- !u!1 &1677560017764882
 GameObject:
   m_ObjectHideFlags: 0

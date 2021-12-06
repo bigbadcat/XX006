@@ -3,20 +3,24 @@ using System.Collections.Generic;
 using UnityEngine;
 using XX006;
 using XX006.Fight;
+using Avatar = XuXiang.Avatar;
 
 public class Player : MonoBehaviour
 {
-
     /// <summary>
     /// 临时测试。
     /// </summary>
     public GameObject FlyingObjectShowTest;
 
-    // Start is called before the first frame update
     void Start()
     {
-        m_Ani = this.GetComponentInChildren<Animator>();
+        m_Avatar = this.GetComponentInChildren<Avatar>();
+        if (m_Avatar != null)
+        {
+            m_Avatar.AnimationFolder = "Character/Qigongdou/Animation";
+        }
         ControllerCenter.Instance.Target = this;
+        TryIdle();
     }
 
     public void TryMove(float d)
@@ -33,12 +37,8 @@ public class Player : MonoBehaviour
         }
 
         m_WantState = -1;
-        m_State = 1;        
-        if (m_Ani != null)
-        {
-            PlayAnimtion("run", 0.1f);
-            //m_Ani.CrossFade("skill02", 0.1f);
-        }
+        m_State = 1;
+        PlayAnimtion("run");
     }
 
     public void TryIdle()
@@ -53,15 +53,9 @@ public class Player : MonoBehaviour
             return;
         }
 
-        if (m_State == 1)
-        {
-            m_WantState = -1;
-            m_State = 0;
-            if (m_Ani != null)
-            {
-                PlayAnimtion("stand", 0.1f);
-            }
-        }
+        m_WantState = -1;
+        m_State = 0;
+        PlayAnimtion("stand");
     }
 
     public bool DoSkill(int id)
@@ -96,9 +90,9 @@ public class Player : MonoBehaviour
             m_CurSkill.AddAction(a_ani, 0);
 
             SkillActionChangeBend a_cb = new SkillActionChangeBend();
-            a_cb.ChangeCurve = new AnimationCurve(new Keyframe(0, 0), new Keyframe(1.4f, 0), new Keyframe(1.6f, 8));
+            a_cb.ChangeCurve = new AnimationCurve(new Keyframe(0.0f, 0), new Keyframe(0.6f, 0), new Keyframe(0.8f, 8));
             a_cb.Duration = 2.0f;
-            m_CurSkill.AddAction(a_cb, 0);
+            m_CurSkill.AddAction(a_cb, 0.8f);
         }
         else if (id == 3)
         {
@@ -112,11 +106,6 @@ public class Player : MonoBehaviour
             a_fo.Speed = 10;
             a_fo.FlyTime = 1;
             m_CurSkill.AddAction(a_fo, 1);
-
-            //SkillActionChangeBend a_cb = new SkillActionChangeBend();
-            //a_cb.ChangeCurve = new AnimationCurve(new Keyframe(0, 0), new Keyframe(1.0f, 0), new Keyframe(1.1f, 8));
-            //a_cb.Duration = 1.1f;
-            //m_CurSkill.AddAction(a_cb, 0);
         }
         return true;
     }
@@ -129,7 +118,8 @@ public class Player : MonoBehaviour
 
     public void PlayAnimtion(string name, float mix = 0.1f)
     {
-        m_Ani.CrossFade(name, mix);
+        //m_Ani.CrossFade(name, mix);
+        m_Avatar?.PlayAnimation(name, mix);
     }
 
     private void Update()
@@ -189,7 +179,7 @@ public class Player : MonoBehaviour
 
     private int m_State = -1;        //0:idle 1:Move 2:Skill
 
-    private Animator m_Ani = null;
+    private Avatar m_Avatar = null;
 
     private SkillRunTime m_CurSkill = null;
 
