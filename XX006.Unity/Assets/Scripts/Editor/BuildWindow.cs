@@ -8,10 +8,10 @@ namespace XX006.EditorTools
 {
     public class BuildWindow : EditorWindow
     {
-        #region ¶ÔÍâ²Ù×÷----------------------------------------------------------------
+        #region å¯¹å¤–æ“ä½œ----------------------------------------------------------------
 
         /// <summary>
-        /// ÏÔÊ¾´ò°ü´°¿Ú¡£
+        /// æ˜¾ç¤ºæ‰“åŒ…çª—å£ã€‚
         /// </summary>
         [MenuItem("Tools/Builder...")]
         public static void ShowBuildWindow()
@@ -20,7 +20,7 @@ namespace XX006.EditorTools
         }
 
         /// <summary>
-        /// ¹¹Ôìº¯Êı¡£
+        /// æ„é€ å‡½æ•°ã€‚
         /// </summary>
         BuildWindow()
         {
@@ -29,10 +29,10 @@ namespace XX006.EditorTools
 
         #endregion
 
-        #region ÄÚ²¿²Ù×÷----------------------------------------------------------------
+        #region å†…éƒ¨æ“ä½œ----------------------------------------------------------------
 
         /// <summary>
-        /// ½çÃæ»æÖÆ¡£
+        /// ç•Œé¢ç»˜åˆ¶ã€‚
         /// </summary>
         private void OnGUI()
         {
@@ -40,12 +40,14 @@ namespace XX006.EditorTools
 
             if (GUILayout.Button("Build AssetBundle", GUILayout.MinHeight(40)))
             {
-                Log.Info("Build AssetBundle");
+                //Log.Info("Build AssetBundle");
+                EditorApplication.update += DoBuildAssetBundle;
             }
 
             if (GUILayout.Button("Copy AssetBundle", GUILayout.MinHeight(40)))
             {
-                Log.Info("Copy AssetBundle");
+                //Log.Info("Copy AssetBundle");
+                EditorApplication.update += DoDivideAsset;
             }
 
             if (GUILayout.Button("Release Package", GUILayout.MinHeight(40)))
@@ -54,6 +56,39 @@ namespace XX006.EditorTools
             }
 
             GUILayout.EndVertical();
+        }
+
+        /// <summary>
+        /// è¿›è¡Œæ‰“åŒ…èµ„æºæ“ä½œã€‚
+        /// </summary>
+        private void DoBuildAssetBundle()
+        {
+            EditorApplication.update -= DoBuildAssetBundle;
+            switch (EditorUserBuildSettings.activeBuildTarget)
+            {
+                case BuildTarget.Android:
+                case BuildTarget.iOS:
+                    break;
+                default:
+                    Log.Error("The active build target is not support. cur:{0}", EditorUserBuildSettings.activeBuildTarget);
+                    return;
+            }
+
+            //æ‰“åŒ…åœºæ™¯éœ€è¦é™„å¸¦åœºæ™¯åˆ—è¡¨
+            List<string> scenes = new List<string>();
+            BuildHelper.BuildAssetBundle(scenes);
+            AssetDatabase.Refresh();
+        }
+
+        /// <summary>
+        /// è¿›è¡Œåˆ’åˆ†èµ„æºæ“ä½œã€‚
+        /// </summary>
+        private void DoDivideAsset()
+        {
+            EditorApplication.update -= DoDivideAsset;
+            BuildTools.CopyAssetBundleDepend(BuildHelper.BundleFolder);
+            BuildHelper.DivideAsset(AssetType.Actor, false);
+            AssetDatabase.Refresh();
         }
 
         #endregion

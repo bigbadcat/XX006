@@ -1,0 +1,6 @@
+
+ui/movecontroller
+-atlas/ui_main
+
+ui/skillbutton
+-atlas/ui_main
