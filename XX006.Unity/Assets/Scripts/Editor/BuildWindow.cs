@@ -47,7 +47,7 @@ namespace XX006.EditorTools
             if (GUILayout.Button("Copy AssetBundle", GUILayout.MinHeight(40)))
             {
                 //Log.Info("Copy AssetBundle");
-                EditorApplication.update += DoDivideAsset;
+                EditorApplication.update += DoCopyAssetBundle;
             }
 
             if (GUILayout.Button("Release Package", GUILayout.MinHeight(40)))
@@ -73,21 +73,18 @@ namespace XX006.EditorTools
                     Log.Error("The active build target is not support. cur:{0}", EditorUserBuildSettings.activeBuildTarget);
                     return;
             }
-
-            //打包场景需要附带场景列表
-            List<string> scenes = new List<string>();
-            BuildHelper.BuildAssetBundle(scenes);
+            BuildHelper.BuildAssetBundle();
             AssetDatabase.Refresh();
         }
 
         /// <summary>
-        /// 进行划分资源操作。
+        /// 进行拷贝AB包操作。
         /// </summary>
-        private void DoDivideAsset()
+        private void DoCopyAssetBundle()
         {
-            EditorApplication.update -= DoDivideAsset;
+            EditorApplication.update -= DoCopyAssetBundle;
             BuildTools.CopyAssetBundleDepend(BuildHelper.BundleFolder);
-            BuildHelper.DivideAsset(AssetType.Actor, false);
+            BuildHelper.CopyAssetBundle();
             AssetDatabase.Refresh();
         }
 

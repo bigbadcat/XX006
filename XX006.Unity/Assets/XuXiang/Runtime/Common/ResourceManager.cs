@@ -279,6 +279,10 @@ namespace XuXiang
             {
                 ResourceMark mark = obj.AddComponent<ResourceMark>();
                 mark.ResPath = path;
+
+#if UNITY_EDITOR
+                UpdateShaderForEditorAB(obj);
+#endif
             }
 
             return obj;
@@ -333,6 +337,9 @@ namespace XuXiang
                 {
                     ResourceMark mark = obj.AddComponent<ResourceMark>();
                     mark.ResPath = path;
+#if UNITY_EDITOR
+                    UpdateShaderForEditorAB(obj);
+#endif
                 }
                 if (on_finish != null)
                 {
@@ -483,6 +490,31 @@ namespace XuXiang
             }
             Log.Error("Can not find asset. path:{0}", path);
             return string.Empty;
+        }
+
+        /// <summary>
+        /// 更新Eiditor下AB模式使用的shader。
+        /// </summary>
+        /// <param name="obj">游戏对象。</param>
+        private void UpdateShaderForEditorAB(GameObject obj)
+        {
+            if (IsReadAssetBundle)
+            {
+                var rds = obj.GetComponentsInChildren<Renderer>();
+                foreach (var rd in rds)
+                {
+                    if (rd != null)
+                    {
+                        foreach (var mat in rd.sharedMaterials)
+                        {
+                            if (mat != null)
+                            {
+                                mat.shader = Shader.Find(mat.shader.name);
+                            }
+                        }
+                    }
+                }
+            }
         }
 
 #endif

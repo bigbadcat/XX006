@@ -93,7 +93,7 @@ namespace XX006.UI
 
         public Image Icon;
         public Image CDProgress;
-        public TMPro.TextMeshProUGUI CDValue;
+        public Text CDValue;
 
         /// <summary>
         /// 判断是否在CD中。

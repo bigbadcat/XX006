@@ -30,8 +30,6 @@ public class GetGrassHeight : MonoBehaviour
     public Vector3 WindDir = new Vector3(-2, -0.5f, 0);
     public Texture WindNoise;
 
-    public Transform[] RoleTargets;
-
     public Terrain Ground;
         
     public float Distance = 10;
@@ -115,7 +113,7 @@ public class GetGrassHeight : MonoBehaviour
 
             GrassChunk chunk = new GrassChunk();
             chunk.Init(kvp.Value, GrassMesh, mats);            
-            GrassManager.Instance.AddGrass(chunk.ChunkInfo.ID, chunk);
+            GrassManager.Instance.AddChunk(chunk);
         }
     }
 

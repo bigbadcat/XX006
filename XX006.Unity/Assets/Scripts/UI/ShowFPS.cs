@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 using XuXiang;
 
 namespace XX006.UI
@@ -36,8 +37,8 @@ namespace XX006.UI
             }
         }
 
-        public TMPro.TextMeshProUGUI DTValue;
-        public TMPro.TextMeshProUGUI FPSValue;
+        public Text DTValue;
+        public Text FPSValue;
 
         private int m_CurDT = 0;
         private int m_CurFPS = 0;

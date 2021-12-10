@@ -1427,7 +1427,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 99c042a3c210fb840b60be5594023967, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_AnimationFolder: 
+  m_AnimationFolder: Character/Sword/Animation/
 --- !u!1 &1677560017764882
 GameObject:
   m_ObjectHideFlags: 0

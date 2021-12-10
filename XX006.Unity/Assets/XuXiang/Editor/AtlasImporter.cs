@@ -8,7 +8,7 @@ using System.Collections;
 using UnityEngine.UI;
 using UnityEngine.Networking;
 
-namespace U3dFrameWork.Editor
+namespace XuXiang.EditorTools
 {
     /// <summary>
     /// 碎图集合导入。

@@ -33,7 +33,7 @@ namespace XuXiang
         private void Awake()
         {
             //复制到的时候，m_Path已经被赋值，需要对引用计数加1。 
-            if (string.IsNullOrEmpty(m_Path))
+            if (!string.IsNullOrEmpty(m_Path))
             {
                 ResourceManager.Instance.AddAssetCount(m_Path);
             }

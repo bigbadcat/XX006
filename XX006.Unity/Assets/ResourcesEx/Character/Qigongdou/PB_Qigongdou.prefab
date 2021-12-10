@@ -1367,7 +1367,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 99c042a3c210fb840b60be5594023967, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_AnimationFolder: 
+  m_AnimationFolder: Character/Qigongdou/Animation/
 --- !u!1 &37026825303829079
 GameObject:
   m_ObjectHideFlags: 0

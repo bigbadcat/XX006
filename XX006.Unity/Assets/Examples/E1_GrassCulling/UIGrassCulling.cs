@@ -7,7 +7,7 @@ using XX006;
 public class UIGrassCulling : MonoBehaviour
 {
     public RawImage RawImg;
-    public TMPro.TextMeshProUGUI TiTle;
+    //public TMPro.TextMeshProUGUI TiTle;
 
     public Button SetFPS30;
     public Button SetFPS60;
@@ -25,7 +25,7 @@ public class UIGrassCulling : MonoBehaviour
         OnSetFPS60Click();
 #endif
 
-        TiTle.text = string.Format("SupportsComputeShaders:{0}", SystemInfo.supportsComputeShaders);
+        //TiTle.text = string.Format("SupportsComputeShaders:{0}", SystemInfo.supportsComputeShaders);
         ViewCamera.localRotation = Quaternion.Euler(0, ViewSlider.value * 360, 0);
 
         RawImg.texture = HizManager.Instance.DepthTexture;

@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using XuXiang;
 
 namespace XX006.Fight
 {
@@ -132,12 +133,18 @@ namespace XX006.Fight
         public override void DoAction(Player player)
         {
             StraightFlyingObject fly_obj = new StraightFlyingObject();
+            GameObject show_obj = string.IsNullOrEmpty(ShowPath) ? null : ResourceManager.Instance.LoadObject(ShowPath);
             fly_obj.Direction = player.transform.forward;
             fly_obj.Speed = Speed;
-            fly_obj.Start(player.transform.position, FlyTime, ShowObject != null ? GameObject.Instantiate(ShowObject) : null);
+
+
+            //ResourceManager.Instance.LoadObject("Character/Qigongdou/Skill/Skill03");
+            //fly_obj.Start(player.transform.position, FlyTime, ShowObject != null ? GameObject.Instantiate(ShowObject) : null);
+            fly_obj.Start(player.transform.position, FlyTime, show_obj);
         }
 
-        public GameObject ShowObject = null;
+        //public GameObject ShowObject = null;
+        public string ShowPath = string.Empty;
 
         public float Speed = 1;
 

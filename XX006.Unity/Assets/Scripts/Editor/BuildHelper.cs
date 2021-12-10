@@ -177,8 +177,7 @@ namespace XX006.EditorTools
         /// <summary>
         /// 打包资源。
         /// </summary>
-        /// <param name="scenes">要打包的场景列表。</param>
-        public static void BuildAssetBundle(List<string> scenes)
+        public static void BuildAssetBundle()
         {
             //收集要打包的资源信息
             DateTime start = DateTime.Now;
@@ -186,10 +185,10 @@ namespace XX006.EditorTools
             EditorUtility.DisplayProgressBar("BuildAssetBundle", "Collect resource info...", 0);
             AddBundleBuild(abbs_list, "ResourcesEx/AppRes", new string[] { PrefabExt, XMLExt }, "AppRes");      //APP基础资源
             AddBundleBuild(abbs_list, "ResourcesEx/Prefabs", new string[] { PrefabExt }, "Prefabs");
-            //AddLuaBundleBuild(abbs_list, precomplie);       //Lua资源
+            AddBundleBuild(abbs_list, "ResourcesEx/Environment", new string[] { PrefabExt }, "Environment");
             AddUIBundleBuild(abbs_list);                    //UI资源
             AddBundleBuild(abbs_list, "ResourcesEx/Scene", new string[] { SceneExt }, "Scene");      //场景资源
-            AddActorBundleBuild(abbs_list);
+            AddCharacterBundleBuild(abbs_list);
 
             //开始打包资源
             string folder = BundleFolder;
@@ -214,6 +213,23 @@ namespace XX006.EditorTools
         public static void LoadSplitInfo()
         {
             CurSplitInfos.Clear();
+        }
+
+        /// <summary>
+        /// 拷贝AB包到特定位置。
+        /// </summary>
+        public static void CopyAssetBundle()
+        {
+            DateTime start = DateTime.Now;
+            DivideBundle("appres", false);
+            DivideBundle("character", false);
+            DivideBundle("scene", false);
+            DivideBundle("atlas", false);
+            DivideBundle("texture", false);
+            DivideBundle("font", false);
+            DivideBundle("ui", false);
+            DivideBundle("environment", false);
+            Log.Info("Build asset bundle finished! use {0} sec. ", (DateTime.Now - start).TotalSeconds);
         }
 
         /// <summary>
@@ -481,38 +497,14 @@ namespace XX006.EditorTools
             }
         }
 
-        ///// <summary>
-        ///// 添加Lua打包信息。
-        ///// </summary>
-        ///// <param name="abbs_list">保存的列表。</param>
-        ///// <param name="precomplie">是否重新预编译Lua。</param>
-        //private static void AddLuaBundleBuild(List<AssetBundleBuild> abbs_list, bool precomplie)
-        //{
-        //    //先预编译，再打AB包
-        //    EditorUtility.DisplayProgressBar("BuildAssetBundle", "PrecompileLua...", 0);
-        //    PrecompileLua();
-        //    EditorUtility.DisplayProgressBar("BuildAssetBundle", "Collect lua resource info...", 0);
-        //    List<string>[] assetnames = new List<string>[3] { new List<string>(), new List<string>(), new List<string>() };
-        //    string ab_use_folder = Path.Combine("Assets", LuaPrecompileFolder);     //打AB包使用的路径包含Assets
-        //    List<string> files = GetLuaList();
-        //    for (int i = 0; i < files.Count; ++i)
-        //    {
-        //        string file = files[i];
-        //        int t = file.StartsWith("Data/") ? 0 : (file.StartsWith("Doc/") ? 1 : 2);
-        //        assetnames[t].Add(Path.Combine(ab_use_folder, file));
-        //    }
+        /// <summary>
+        /// 添加Shader打包信息。
+        /// </summary>
+        /// <param name="abbs_list">保存的列表。</param>
+        private static void AddShaderBundleBuild(List<AssetBundleBuild> abbs_list)
+        {
 
-        //    //生成打包信息
-        //    for (int i = 0; i < LuaManager.LuaAssetBundleNames.Length; ++i)
-        //    {
-        //        AssetBundleBuild abb = new AssetBundleBuild();
-        //        abb.assetBundleName = "lua/" + LuaManager.LuaAssetBundleNames[i] + AssetBundleManager.AssetBundleExt;
-        //        abb.assetBundleVariant = string.Empty;
-        //        abb.assetNames = assetnames[i].ToArray();
-        //        abbs_list.Add(abb);
-        //    }
-        //    EditorUtility.ClearProgressBar();
-        //}
+        }
 
         /// <summary>
         /// 添加UI打包信息。
@@ -523,7 +515,7 @@ namespace XX006.EditorTools
             //UI资源包括图集、背景图、字体和Prefab
             AddBundleBuild(abbs_list, "ResourcesEx/Atlas", new string[] { ".png" }, "atlas");
             AddBundleBuild(abbs_list, "ResourcesEx/Texture", new string[] { ".png", ".jpg" }, "texture");
-            AddBundleBuild(abbs_list, "ResourcesEx/Fonts", new string[] { ".ttf", ".fontsettings" }, "fonts");
+            AddBundleBuild(abbs_list, "ResourcesEx/Font", new string[] { ".ttf", ".fontsettings" }, "font");
             AddBundleBuild(abbs_list, "ResourcesEx/UI", new string[] { PrefabExt }, "ui");
         }
 
@@ -531,7 +523,7 @@ namespace XX006.EditorTools
         /// 添加角色打包信息。
         /// </summary>
         /// <param name="abbs_list">保存的列表。</param>
-        private static void AddActorBundleBuild(List<AssetBundleBuild> abbs_list)
+        private static void AddCharacterBundleBuild(List<AssetBundleBuild> abbs_list)
         {
             string path = Path.Combine(Application.dataPath, "ResourcesEx/Character");
             string[] folders = Directory.GetDirectories(path);
@@ -544,7 +536,8 @@ namespace XX006.EditorTools
                 }
                 else
                 {
-                    AddActorBundleBuild(abbs_list, name);
+                    //AddCharacterBundleBuild(abbs_list, name);
+                    AddBundleBuild(abbs_list, string.Format("ResourcesEx/Character/{0}", name), new string[] { PrefabExt, ".anim" }, "character/" + name);
                 }
             }
         }
@@ -568,96 +561,6 @@ namespace XX006.EditorTools
             abb.assetBundleVariant = string.Empty;
             abb.assetNames = assets.ToArray();
             abbs_list.Add(abb);
-        }
-
-        /// <summary>
-        /// 添加角色打包信息。
-        /// </summary>
-        /// <param name="abbs_list">保存的列表。</param>
-        /// <param name="name">角色名称。</param>
-        private static void AddActorBundleBuild(List<AssetBundleBuild> abbs_list, string name)
-        {
-            //模型prefab
-            int n = EditorUtil.ProjectPath.Length + 1;
-            string prefab_path = Path.Combine(Application.dataPath, string.Format("ResourcesEx/Character/{0}/{0}.prefab", name));
-            AssetBundleBuild abb_prefab = new AssetBundleBuild();
-            abb_prefab.assetBundleName = string.Format("Character/{0}/{0}{1}", name, AssetBundleManager.AssetBundleExt).ToLower();
-            abb_prefab.assetBundleVariant = string.Empty;
-            abb_prefab.assetNames = new string[1] { prefab_path.Substring(n) };
-            abbs_list.Add(abb_prefab);
-
-            //动作
-            string path = Path.Combine(Application.dataPath, string.Format("ResourcesEx/Character/{0}/Animation", name));
-            if (!Directory.Exists(path))
-            {
-                return;
-            }
-            string[] anim_files = Directory.GetFiles(path, "*.anim", SearchOption.TopDirectoryOnly);
-            foreach (string file in anim_files)
-            {
-                string asset = file.Substring(n).Replace('\\', '/');
-                string ab = Path.ChangeExtension(asset, AssetBundleManager.AssetBundleExt).Substring("Assets/ResourcesEx/".Length);
-                AssetBundleBuild abb_anim = new AssetBundleBuild();
-                abb_anim.assetBundleName = ab;
-                abb_anim.assetBundleVariant = string.Empty;
-                abb_anim.assetNames = new string[1] { asset };
-                abbs_list.Add(abb_anim);
-            }
-        }
-
-        /// <summary>
-        /// 获取Lua文件列表。
-        /// </summary>
-        /// <returns>Lua文件列表。</returns>
-        private static List<string> GetLuaList()
-        {            
-            string lua_out_folder = Path.Combine(Application.dataPath, LuaPrecompileFolder);
-            string[] old_files = Directory.GetFiles(lua_out_folder, "*" + LuaPrecompileExt, SearchOption.AllDirectories);
-            List<string> files = new List<string>();
-            foreach (string f in old_files)
-            {
-                string file = f.Substring(lua_out_folder.Length + 1).Replace('\\', '/');
-                files.Add(file);
-            }
-            return files;
-        }
-
-        /// <summary>
-        /// 预编译Lua。
-        /// </summary>
-        private static void PrecompileLua()
-        {
-            //通过时间戳获取要预编译的Lua
-            DateTime start = DateTime.Now;
-            string lua_folder = Path.Combine(Application.dataPath, LuaScriptFolder);
-            string lua_out_folder = Path.Combine(Application.dataPath, LuaPrecompileFolder);
-            EditorUtil.CheckOrCreateFolder(lua_out_folder);
-            Dictionary<string, long> src_time = BuildTools.GetFileLastWriteTime(lua_folder, "*" + LuaScriptExt);
-            Dictionary<string, long> dst_time = BuildTools.GetFileLastWriteTime(lua_out_folder, "*" + LuaPrecompileExt);
-            List<string> need_copy = BuildTools.GetNeedCopyFiles(src_time, dst_time, LuaPrecompileExt);
-
-            //预编译
-            bool use_chunk = EditorUserBuildSettings.activeBuildTarget == BuildTarget.Android;
-            Log.Info(string.Format("PrecompileLua Copy:{0} Remove:{1}", need_copy.Count, dst_time.Count));
-            for (int i = 0; i < need_copy.Count; i++)
-            {
-                string str = need_copy[i];
-                string file = lua_folder + str;
-                string to_file = lua_out_folder + Path.ChangeExtension(str, LuaPrecompileExt);
-                BuildTools.CopyLua(file, to_file, use_chunk);
-                EditorUtility.DisplayProgressBar("CopyLua", str, (i + 1.0f) / need_copy.Count);
-            }
-
-            //删除已经不存在的Lua
-            EditorUtility.DisplayProgressBar("CopyLua", "Remove redundant files...", 1);
-            foreach (var kvp in dst_time)
-            {
-                string to_file = lua_out_folder + kvp.Key;
-                File.Delete(to_file);
-            }
-            EditorUtility.ClearProgressBar();
-            AssetDatabase.Refresh();
-            Log.Info("Precompile lua finished! use {0} sec. ", (DateTime.Now - start).TotalSeconds);
         }
 
         /// <summary>
@@ -832,9 +735,9 @@ namespace XX006.EditorTools
         private static void DivideUIBundle(bool split)
         {
             DateTime start = DateTime.Now;
-            DivideBundle("atlas", split);
-            DivideBundle("texture", split);
-            DivideBundle("fonts", split);
+            //DivideBundle("atlas", split);
+            //DivideBundle("texture", split);
+            //DivideBundle("fonts", split);
             DivideBundle("ui", split);
             AssetDatabase.Refresh();
             Log.Info("Divide ui bundle finished! use {0} sec. ", (DateTime.Now - start).TotalSeconds);
@@ -854,48 +757,62 @@ namespace XX006.EditorTools
             {
                 Directory.Delete(dst_folder, true);       //AB包可以随意重新生成meta文件和分配GUID，所以简单粗暴清除文件夹所有内容
                 File.Delete(dst_folder + ".meta");
-            }            
-            Dictionary<string, int> ab_info = GetBundleSpiltInfo(src_folder, split);
-            foreach (var kvp in ab_info)
-            {
-                if (kvp.Value == 0)
-                {
-                    //首包
-                    string sub_file = kvp.Key.Substring(src_folder.Length+1);
-                    string to_file = Path.Combine(dst_folder, sub_file);
-                    EditorUtil.CheckOrCreateFolder(Path.GetDirectoryName(to_file));
-                    File.Copy(kvp.Key, to_file);
-                }
-                else
-                {
-                    //对应分包目录
-                }
             }
+            if (!Directory.Exists(src_folder))
+            {
+                return;
+            }
+
+            string[] files = Directory.GetFiles(src_folder, "*" + AssetBundleManager.AssetBundleExt, SearchOption.AllDirectories);
+            foreach (var file in files)
+            {
+                string sub_file = file.Substring(src_folder.Length + 1);
+                string to_file = Path.Combine(dst_folder, sub_file);
+                EditorUtil.CheckOrCreateFolder(Path.GetDirectoryName(to_file));
+                File.Copy(file, to_file);
+            }
+
+            //Dictionary<string, int> ab_info = GetBundleSpiltInfo(src_folder, split);
+            //foreach (var kvp in ab_info)
+            //{
+            //    if (kvp.Value == 0)
+            //    {
+            //        //首包
+            //        string sub_file = kvp.Key.Substring(src_folder.Length+1);
+            //        string to_file = Path.Combine(dst_folder, sub_file);
+            //        EditorUtil.CheckOrCreateFolder(Path.GetDirectoryName(to_file));
+            //        File.Copy(kvp.Key, to_file);
+            //    }
+            //    else
+            //    {
+            //        //对应分包目录
+            //    }
+            //}
         }
 
-        /// <summary>
-        /// 获取分包信息。
-        /// </summary>
-        /// <param name="folder"></param>
-        /// <param name="split"></param>
-        private static Dictionary<string, int> GetBundleSpiltInfo(string folder, bool split)
-        {
-            //分配
-            Dictionary<string, int> ret = new Dictionary<string, int>();
-            string[] files = Directory.GetFiles(folder, "*" + AssetBundleManager.AssetBundleExt, SearchOption.AllDirectories);
-            foreach (var f in files)
-            {
-                if (split)
-                {
-                    //通过资源相对路径获取分包号
-                }
-                else
-                {
-                    ret.Add(f, 0);
-                }
-            }
-            return ret;
-        }
+        ///// <summary>
+        ///// 获取分包信息。
+        ///// </summary>
+        ///// <param name="folder"></param>
+        ///// <param name="split"></param>
+        //private static Dictionary<string, int> GetBundleSpiltInfo(string folder, bool split)
+        //{
+        //    //分配
+        //    Dictionary<string, int> ret = new Dictionary<string, int>();
+        //    string[] files = Directory.GetFiles(folder, "*" + AssetBundleManager.AssetBundleExt, SearchOption.AllDirectories);
+        //    foreach (var f in files)
+        //    {
+        //        if (split)
+        //        {
+        //            //通过资源相对路径获取分包号
+        //        }
+        //        else
+        //        {
+        //            ret.Add(f, 0);
+        //        }
+        //    }
+        //    return ret;
+        //}
 
         #endregion
 

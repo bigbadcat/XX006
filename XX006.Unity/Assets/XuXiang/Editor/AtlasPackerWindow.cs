@@ -7,7 +7,7 @@ using UnityEditor;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace U3dFrameWork.Editor
+namespace XuXiang.EditorTools
 {
     /// <summary>
     /// 自动调用TexturePacker打包图片并导入到Unity中。

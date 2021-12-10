@@ -72,25 +72,24 @@ namespace XX006
         /// <summary>
         /// 添加草块。
         /// </summary>
-        /// <param name="id">草块编号。</param>
         /// <param name="chunk">草块对象。</param>
-        public void AddGrass(int id, GrassChunk chunk)
+        public void AddChunk(GrassChunk chunk)
         {
 #if UNITY_EDITOR
-            if (m_GrassChunks.ContainsKey(id))
+            if (m_GrassChunks.ContainsKey(chunk.ChunkInfo.ID))
             {
-                Log.Error("The grass chunk with ID {0} already exists", id);
+                Log.Error("The grass chunk with ID {0} already exists", chunk.ChunkInfo.ID);
                 return;
             }
 #endif
-            m_GrassChunks.Add(id, chunk);
+            m_GrassChunks.Add(chunk.ChunkInfo.ID, chunk);
         }
 
         /// <summary>
         /// 移除草块。
         /// </summary>
         /// <param name="id">草块编号。</param>
-        public void RemoveGrass(int id)
+        public void RemoveChunk(int id)
         {
             GrassChunk ck;
             if (m_GrassChunks.TryGetValue(id, out ck))

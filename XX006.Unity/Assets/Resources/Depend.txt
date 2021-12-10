@@ -1,6 +1,27 @@
 
+character/qigongdou/pb_qigongdou
+-character/emptyanimation
+
+character/sword/pb_sword
+-character/emptyanimation
+
+environment/pb_grass
+-environment/tr_test
+
 ui/movecontroller
 -atlas/ui_main
 
+ui/showfps
+-font/simhei
+
 ui/skillbutton
 -atlas/ui_main
+-font/simhei
+
+ui/uicharactercontrol
+-atlas/ico_item
+-atlas/ui_main
+-font/simhei
+-ui/movecontroller
+-ui/showfps
+-ui/skillbutton
