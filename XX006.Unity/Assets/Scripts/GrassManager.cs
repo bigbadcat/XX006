@@ -51,6 +51,7 @@ namespace XX006
             m_PID_WindGap = Shader.PropertyToID("_WindGap");
             m_PID_WindDir = Shader.PropertyToID("_WindDir");
             m_PID_WindNoise = Shader.PropertyToID("_WindNoise");
+            m_PID_WindNoiseSize = Shader.PropertyToID("_WindNoiseSize");
             m_PID_CameraVPMatrix = Shader.PropertyToID("_CameraVPMatrix");
             m_PID_BoundPoints = Shader.PropertyToID("_BoundPoints");
 
@@ -211,10 +212,12 @@ namespace XX006
             set 
             { 
                 m_WindNoise = value;
-                m_CullingCompute.SetTexture(m_CullingKernel[0], m_PID_WindNoise, m_WindNoise);
-                m_CullingCompute.SetTexture(m_CullingKernel[1], m_PID_WindNoise, m_WindNoise);
-                m_CullingCompute.SetTexture(m_CullingKernel[2], m_PID_WindNoise, m_WindNoise);
-                m_CullingCompute.SetTexture(m_CullingKernel[3], m_PID_WindNoise, m_WindNoise);
+                for (int i=0; i< m_CullingKernel.Length; ++i)
+                {
+                    int k = m_CullingKernel[i];
+                    m_CullingCompute.SetTexture(k, m_PID_WindNoise, m_WindNoise);
+                }
+                m_CullingCompute.SetInt(m_PID_WindNoiseSize, m_WindNoise.width);
             }
         }
 
@@ -289,6 +292,7 @@ namespace XX006
         private int m_PID_WindGap = 0;
         private int m_PID_WindDir = 0;
         private int m_PID_WindNoise = 0;
+        private int m_PID_WindNoiseSize = 0;
         private int m_PID_CameraVPMatrix = 0;
         private int m_PID_BoundPoints = 0;
 

@@ -35,33 +35,21 @@ public class GetGrassHeight : MonoBehaviour
     public float Distance = 10;
 
     public Mesh[] GrassMesh;
-    public Material[] GrassMat;
-    //public ComputeShader ViewFrustumCulling;
-    public Material HizmipmapMat;
+    public Texture GrassTex;
 
     private float m_Wind = 0;
 
     void Start()
     {
-        //GrassManager.Instance.CullingCompute = ViewFrustumCulling;
         GrassManager.Instance.CullingCompute = ComputeShaderHolder.GetComputeShader("GrassCullingCompute");
         GrassManager.Instance.WindNoise = WindNoise;
-        HizManager.Instance.MipmapMat = HizmipmapMat;
-        for (int i=0; i< GrassMat.Length; ++i)
-        {
-            GrassMat[i].EnableKeyword("SHADOWS_SCREEN");
-            GrassMat[i].EnableKeyword("SHADOWS_DEPTH");
-#if UNITY_EDITOR
-            GrassMat[i].shader = Shader.Find(GrassMat[i].shader.name);
-#endif
-        }
-        
+
         BuildGrass();
     }
 
     public void BuildGrass()
     {
-        if (Ground == null || GrassMesh == null || GrassMat == null)
+        if (Ground == null || GrassMesh == null)
         {
             return;
         }
@@ -109,10 +97,18 @@ public class GetGrassHeight : MonoBehaviour
         Log.Info("GrassCount:{0} chunk:{1}-{2}", n, id_chunk.Count, n/id_chunk.Count);
         foreach (var kvp in id_chunk)
         {
-            Material[] mats = new Material[GrassMat.Length];
-            for (int i = 0; i < GrassMat.Length; ++i)
+            Material[] mats = new Material[4];
+            mats[0] = new Material(ResourceManager.Instance.LoadShader("Unlit/GrassHeight"));
+            mats[1] = new Material(ResourceManager.Instance.LoadShader("Unlit/GrassMiddle"));
+            mats[2] = new Material(ResourceManager.Instance.LoadShader("Unlit/GrassLow"));
+            mats[3] = new Material(ResourceManager.Instance.LoadShader("Unlit/GrassStatic"));
+            for (int i = 0; i < mats.Length; ++i)
             {
-                mats[i] = new Material(GrassMat[i]);
+                mats[i].mainTexture = GrassTex;
+                mats[i].SetColor("_Color", new Color(92/255.0f, 183/255.0f, 95/255.0f));
+                mats[i].enableInstancing = true;
+                mats[i].EnableKeyword("SHADOWS_SCREEN");
+                mats[i].EnableKeyword("SHADOWS_DEPTH");
             }
 
             GrassChunk chunk = new GrassChunk();
@@ -124,7 +120,7 @@ public class GetGrassHeight : MonoBehaviour
     public void LateUpdate()
     {
         Camera camera = Camera.main;
-        if (GrassMesh != null && GrassMat != null)
+        if (GrassMesh != null)
         {
             m_Wind += Time.deltaTime * WindSpeed;
             GrassManager.Instance.DrawGrass(m_Wind, WindGap, this.transform.forward, camera);

@@ -62,12 +62,13 @@ namespace XX006
 
             //预加载字体
             IsRun = true;
-            //AppDocumentText.Init();
             if (ResourceManager.Instance.IsReadAssetBundle)
             {
                 AssetBundleManager.Instance.LoadDepend();
+                ResourceManager.Instance.InitShaders("shaders/shader");
             }
 
+            //切换场景
             string name = "BigWorld";
             if (ResourceManager.Instance.IsReadAssetBundle)
             {

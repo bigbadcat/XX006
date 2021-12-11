@@ -183,6 +183,7 @@ namespace XX006.EditorTools
             DateTime start = DateTime.Now;
             List<AssetBundleBuild> abbs_list = new List<AssetBundleBuild>();
             EditorUtility.DisplayProgressBar("BuildAssetBundle", "Collect resource info...", 0);
+            AddShaderBundleBuild(abbs_list);                    //Shader
             AddBundleBuild(abbs_list, "ResourcesEx/AppRes", new string[] { PrefabExt, XMLExt }, "AppRes");      //APP基础资源
             AddBundleBuild(abbs_list, "ResourcesEx/Prefab", new string[] { PrefabExt }, "Prefab");
             AddBundleBuild(abbs_list, "ResourcesEx/Environment", new string[] { PrefabExt }, "Environment");
@@ -230,6 +231,7 @@ namespace XX006.EditorTools
             DivideBundle("ui", false);
             DivideBundle("environment", false);
             DivideBundle("prefab", false);
+            DivideBundle("shaders", false);
             Log.Info("Build asset bundle finished! use {0} sec. ", (DateTime.Now - start).TotalSeconds);
         }
 
@@ -504,7 +506,33 @@ namespace XX006.EditorTools
         /// <param name="abbs_list">保存的列表。</param>
         private static void AddShaderBundleBuild(List<AssetBundleBuild> abbs_list)
         {
+            string res_folder = Path.Combine(Application.dataPath, "Shaders");
+            if (!Directory.Exists(res_folder))
+            {
+                return;
+            }
 
+            List<string> files = new List<string>();
+            files.AddRange(Directory.GetFiles(res_folder, "*.shader", SearchOption.AllDirectories));
+            if (files.Count <= 0)
+            {
+                return;
+            }
+
+            List<string> assetNames = new List<string>();
+            string ab_use_folder = "Assets/Shaders";     //打AB包使用的路径包含Assets
+            AssetBundleBuild abb = new AssetBundleBuild();
+            string ab = "shaders/shader" + AssetBundleManager.AssetBundleExt;
+            abb.assetBundleName = ab;
+            abb.assetBundleVariant = string.Empty;
+            foreach (string file in files)
+            {
+                string res = file.Substring(res_folder.Length + 1).Replace('\\', '/');
+                string asset = Path.Combine(ab_use_folder, res);
+                assetNames.Add(asset);
+            }
+            abb.assetNames = assetNames.ToArray();
+            abbs_list.Add(abb);
         }
 
         /// <summary>

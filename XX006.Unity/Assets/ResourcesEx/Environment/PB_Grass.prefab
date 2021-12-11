@@ -59,10 +59,4 @@ MonoBehaviour:
   - {fileID: 4300000, guid: 94c7e5a32eff1524cb4a60438c360071, type: 2}
   - {fileID: 4300000, guid: 3dc9c2b45c2c76848b79fe472bf283be, type: 2}
   - {fileID: 4300000, guid: 3dc9c2b45c2c76848b79fe472bf283be, type: 2}
-  GrassMat:
-  - {fileID: 2100000, guid: 4e2c0550ff1ba2a408d8d9e33d5d0bdf, type: 2}
-  - {fileID: 2100000, guid: 17a9657fa79fd3f478fc95f7f0d31bb7, type: 2}
-  - {fileID: 2100000, guid: a6440ef2281c6be40afe2bdf5643dccb, type: 2}
-  - {fileID: 2100000, guid: 31d5cc3ef4d12ff41b6233a97a0c9edc, type: 2}
-  ViewFrustumCulling: {fileID: 7200000, guid: 05fd5881f2bb65a4aa4065037a9f2a89, type: 3}
-  HizmipmapMat: {fileID: 2100000, guid: 305f34e8b9ebf74468e61a2049444e87, type: 2}
+  GrassTex: {fileID: 2800000, guid: 1938adcb33357ca4badd70fe7d7ace69, type: 3}

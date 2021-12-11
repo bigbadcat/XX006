@@ -262,6 +262,26 @@ namespace XuXiang
         #region 对外操作----------------------------------------------------------------
 
         /// <summary>
+        /// 初始化着色器。
+        /// </summary>
+        /// <param name="path">ShaderAB包资源路径。</param>
+        public void InitShaders(string path)
+        {
+#if !UNITY_EDITOR
+            AssetBundle ab = AssetBundleManager.Instance.LoadAssetBundle("shaders/shader");
+            UnityEngine.Object[] assets = ab.LoadAllAssets();
+            for (int i=0; i< assets.Length; ++i)
+            {
+                Shader shader = assets[i] as Shader;
+                if (shader != null && !m_Shaders.ContainsKey(shader.name))
+                {
+                    m_Shaders.Add(shader.name, shader);
+                }
+            }
+#endif
+        }
+
+        /// <summary>
         /// 加载游戏对象。
         /// </summary>
         /// <param name="path">资源路径。(仅限于不带后缀的Prefab或AssetBundle文件)</param>
@@ -372,6 +392,22 @@ namespace XuXiang
         }
 
         /// <summary>
+        /// 加载着色器。
+        /// </summary>
+        /// <param name="name">着色器名称。</param>
+        /// <returns>着色器。</returns>
+        public Shader LoadShader(string name)
+        {
+#if UNITY_EDITOR
+            return Shader.Find(name);
+#else
+            Shader shader = null;
+            m_Shaders.TryGetValue(name, out shader);
+            return shader;
+#endif
+        }
+
+        /// <summary>
         /// 加载文本。
         /// </summary>
         /// <param name="path">文本路径。</param>
@@ -444,9 +480,9 @@ namespace XuXiang
             }
         }
 
-        #endregion
+#endregion
 
-        #region 对外属性----------------------------------------------------------------
+#region 对外属性----------------------------------------------------------------
 
         /// <summary>
         /// 获取或设置是否读取AB包。
@@ -465,9 +501,9 @@ namespace XuXiang
             get { return m_AssetInfos; }
         }
 
-        #endregion
+#endregion
 
-        #region 内部操作----------------------------------------------------------------
+#region 内部操作----------------------------------------------------------------
 
 #if UNITY_EDITOR
 
@@ -672,9 +708,9 @@ namespace XuXiang
             }
         }
 
-        #endregion
+#endregion
 
-        #region 内部数据----------------------------------------------------------------
+#region 内部数据----------------------------------------------------------------
 
         /// <summary>
         /// 是否读取AB包。
@@ -696,6 +732,11 @@ namespace XuXiang
         /// </summary>
         private List<int> m_AsynNeedRemove = new List<int>();
 
-        #endregion
+        /// <summary>
+        /// 着色器。
+        /// </summary>
+        private Dictionary<string, Shader> m_Shaders = new Dictionary<string, Shader>();
+
+#endregion
     }
 }

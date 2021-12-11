@@ -199,7 +199,7 @@ Shader "Unlit/GrassHeight"
                     return clipPos;
             }
 
-			v2fShadow vertShadow(appdata v, uint instanceID : SV_InstanceID)
+			v2fShadow vertShadow(appdata v)
             {
 				v2fShadow o;
                 UNITY_SETUP_INSTANCE_ID(v);

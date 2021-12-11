@@ -29,6 +29,7 @@ float _Wind;
 float _WindGap;
 float4 _WindDir;        //w=sqrt(AA+BB+CC)
 Texture2D _WindNoise;
+uint _WindNoiseSize;
 
 
 uint _BendCount;
@@ -124,7 +125,7 @@ float4 GetWind(float3 pos)
 {
     float4 wind = float4(0, 0, 0, 0);
     float2 noise_uv = (-_WindDir.xz * _Wind + pos.xz) / _WindGap;       //UV move in the opposite direction
-    float rate = Tex2DWrap(_WindNoise, uint2(256, 256), noise_uv).r;
+    float rate = Tex2DWrap(_WindNoise, uint2(_WindNoiseSize, _WindNoiseSize), noise_uv).r;
     wind.xyz = normalize(_WindDir.xyz + _WindDir.zyx * (rate - 0.5));         //swing
     wind.w = rate;
     return wind;

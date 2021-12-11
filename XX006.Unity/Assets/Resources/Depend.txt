@@ -1,9 +1,11 @@
 
 character/qigongdou/pb_qigongdou
 -character/emptyanimation
+-shaders/shader
 
 character/sword/pb_sword
 -character/emptyanimation
+-shaders/shader
 
 environment/pb_grass
 -environment/tr_test
