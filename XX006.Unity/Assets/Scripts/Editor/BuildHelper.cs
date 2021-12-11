@@ -184,7 +184,7 @@ namespace XX006.EditorTools
             List<AssetBundleBuild> abbs_list = new List<AssetBundleBuild>();
             EditorUtility.DisplayProgressBar("BuildAssetBundle", "Collect resource info...", 0);
             AddBundleBuild(abbs_list, "ResourcesEx/AppRes", new string[] { PrefabExt, XMLExt }, "AppRes");      //APP基础资源
-            AddBundleBuild(abbs_list, "ResourcesEx/Prefabs", new string[] { PrefabExt }, "Prefabs");
+            AddBundleBuild(abbs_list, "ResourcesEx/Prefab", new string[] { PrefabExt }, "Prefab");
             AddBundleBuild(abbs_list, "ResourcesEx/Environment", new string[] { PrefabExt }, "Environment");
             AddUIBundleBuild(abbs_list);                    //UI资源
             AddBundleBuild(abbs_list, "ResourcesEx/Scene", new string[] { SceneExt }, "Scene");      //场景资源
@@ -229,6 +229,7 @@ namespace XX006.EditorTools
             DivideBundle("font", false);
             DivideBundle("ui", false);
             DivideBundle("environment", false);
+            DivideBundle("prefab", false);
             Log.Info("Build asset bundle finished! use {0} sec. ", (DateTime.Now - start).TotalSeconds);
         }
 

@@ -36,20 +36,24 @@ public class GetGrassHeight : MonoBehaviour
 
     public Mesh[] GrassMesh;
     public Material[] GrassMat;
-    public ComputeShader ViewFrustumCulling;
+    //public ComputeShader ViewFrustumCulling;
     public Material HizmipmapMat;
 
     private float m_Wind = 0;
 
     void Start()
     {
-        GrassManager.Instance.CullingCompute = ViewFrustumCulling;
+        //GrassManager.Instance.CullingCompute = ViewFrustumCulling;
+        GrassManager.Instance.CullingCompute = ComputeShaderHolder.GetComputeShader("GrassCullingCompute");
         GrassManager.Instance.WindNoise = WindNoise;
         HizManager.Instance.MipmapMat = HizmipmapMat;
         for (int i=0; i< GrassMat.Length; ++i)
         {
             GrassMat[i].EnableKeyword("SHADOWS_SCREEN");
             GrassMat[i].EnableKeyword("SHADOWS_DEPTH");
+#if UNITY_EDITOR
+            GrassMat[i].shader = Shader.Find(GrassMat[i].shader.name);
+#endif
         }
         
         BuildGrass();
