@@ -44,6 +44,24 @@ namespace XX006
         /// </summary>
         public static bool IsRun { get; private set; }
 
+        /// <summary>
+        /// 获取UI根节点对象。
+        /// </summary>
+        public static PanelManager UIRoot 
+        { 
+            get
+            {
+                if (s_UIRoot == null)
+                {
+                    s_UIRoot = ResourceManager.Instance.LoadObject<PanelManager>("AppRes/UIRoot");
+                    s_UIRoot.transform.localPosition = new Vector3(0, 50, 0);
+                    DontDestroyOnLoad(s_UIRoot.gameObject);
+                }
+
+                return s_UIRoot;
+            }
+        }
+
         #endregion
 
         #region 内部操作----------------------------------------------------------------
@@ -58,6 +76,7 @@ namespace XX006
             ResourceManager.Instance.IsReadAssetBundle = m_IsPackMode;
 #else
             ResourceManager.Instance.IsReadAssetBundle = true;      //非编辑器只能读取AB包
+            Application.targetFrameRate = 60;
 #endif
 
             //预加载字体
@@ -91,6 +110,12 @@ namespace XX006
         private bool m_IsPackMode = false;
 
 #endif
+
+
+        /// <summary>
+        /// UI面板管理。
+        /// </summary>
+        private static PanelManager s_UIRoot = null;
 
         #endregion
     }

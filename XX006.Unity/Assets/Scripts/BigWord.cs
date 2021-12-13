@@ -37,14 +37,15 @@ namespace XX006
         /// </summary>
         private void InitUI()
         {
-            m_UI = ResourceManager.Instance.LoadObject("UI/UICharacterControl");
-            m_UI.gameObject.SetActive(true);
+            AppRoot.UIRoot.Open(1, "UI/UICharacterControl");
+            //m_UI = ResourceManager.Instance.LoadObject("UI/UICharacterControl");
+            //m_UI.gameObject.SetActive(true);
 
-            Canvas ui = m_UI.GetComponent<Canvas>();
-            Camera uicamera = GameObject.Find("UICamera").GetComponent<Camera>();
-            ui.renderMode = RenderMode.ScreenSpaceCamera;
-            ui.worldCamera = uicamera;
-            ui.planeDistance = 1.1f;            
+            //Canvas ui = m_UI.GetComponent<Canvas>();
+            //Camera uicamera = GameObject.Find("UICamera").GetComponent<Camera>();
+            //ui.renderMode = RenderMode.ScreenSpaceCamera;
+            //ui.worldCamera = uicamera;
+            //ui.planeDistance = 1.1f;            
         }
 
         /// <summary>
@@ -112,10 +113,5 @@ namespace XX006
                 obj.AddComponent<NPC>();
             }
         }
-
-        /// <summary>
-        /// UI对象。
-        /// </summary>
-        private GameObject m_UI = null;
     }
 }

@@ -4,7 +4,7 @@ using UnityEngine;
 using XuXiang;
 using XX006;
 
-public class UICharacterControl : MonoBehaviour, TouchReceiver.ITouchProcesser
+public class UICharacterControl : PanelBase, TouchReceiver.ITouchProcesser
 {
     public void OnClick(float x, float y)
     {
@@ -28,12 +28,6 @@ public class UICharacterControl : MonoBehaviour, TouchReceiver.ITouchProcesser
     // Start is called before the first frame update
     void Start()
     {
-#if !UNITY_EDITOR
-    Application.targetFrameRate = 60;
-#endif
-
         this.GetComponentInChildren<TouchReceiver>().Processer = this;
-
-        
     }
 }
