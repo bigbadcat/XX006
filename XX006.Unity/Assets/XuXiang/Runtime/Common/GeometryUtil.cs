@@ -18,6 +18,115 @@ namespace XuXiang
         }
 
         /// <summary>
+        /// 获取点在某个面上的投影。
+        /// </summary>
+        /// <param name="point">点坐标。</param>
+        /// <param name="plane">平面，xyzw分别表示平面方程Ax+By+Cz+D=0里的ABCD。</param>
+        /// <returns>投影坐标。</returns>
+        public static Vector3 GetProjection(Vector3 point, Vector4 plane)
+        {
+            float t1 = plane.x * point.x + plane.y * point.y + plane.z * point.z + plane.w;
+            float t2 = plane.x * plane.x + plane.y * plane.y + plane.z * plane.z;
+            float t = t1 / t2;
+            float x = point.x - plane.x * t;
+            float y = point.y - plane.y * t;
+            float z = point.z - plane.z * t;
+            return new Vector3(x, y, z);
+        }
+
+        /// <summary>
+        /// 获取三角形法线。
+        /// </summary>
+        /// <param name="p1">顺时针顺序分布的第一个点坐标。</param>
+        /// <param name="p2">顺时针顺序分布的第二个点坐标。</param>
+        /// <param name="p3">顺时针顺序分布的第三个点坐标。</param>
+        /// <returns>朝向单位向量。</returns>
+        public static Vector3 GetNormal(Vector3 p1, Vector3 p2, Vector3 p3)
+        {
+            return Vector3.Cross(p2 - p1, p3 - p1).normalized;
+        }
+
+        /// <summary>
+        /// 获取四边形朝向。
+        /// </summary>
+        /// <param name="p1">顺时针顺序分布的第一个点坐标。</param>
+        /// <param name="p2">顺时针顺序分布的第二个点坐标。</param>
+        /// <param name="p3">顺时针顺序分布的第三个点坐标。</param>
+        /// <param name="p3">顺时针顺序分布的第四个点坐标。</param>
+        /// <returns>朝向单位向量。(p1-p3割开的两个三角形朝向的平均值)</returns>
+        public static Vector3 GetNormal(Vector3 p1, Vector3 p2, Vector3 p3, Vector3 p4)
+        {
+            return (GetNormal(p1, p2, p3) + GetNormal(p1, p3, p4)).normalized;
+        }
+
+        /// <summary>
+        /// 获取三角形面积。
+        /// </summary>
+        /// <param name="p1">顺时针顺序分布的第一个点坐标。</param>
+        /// <param name="p2">顺时针顺序分布的第二个点坐标。</param>
+        /// <param name="p3">顺时针顺序分布的第三个点坐标。</param>
+        /// <returns>三角形面积。</returns>
+        public static float GetArea(Vector3 p1, Vector3 p2, Vector3 p3)
+        {
+            return Vector3.Cross(p2 - p1, p3 - p1).magnitude / 2;
+        }
+
+        /// <summary>
+        /// 获取两个向量的夹角。
+        /// </summary>
+        /// <param name="a">向量A。</param>
+        /// <param name="b">向量B。</param>
+        /// <returns>向量夹角[0-180]。</returns>
+        public static float GetAngle(Vector3 a, Vector3 b)
+        {
+            float dot = Vector3.Dot(a, b);
+            float angle = Mathf.Acos(dot) * Mathf.Rad2Deg;
+            return angle;
+        }
+
+        /// <summary>
+        /// 获取从一个向量逆时针旋转到另一个向量需要的角度。
+        /// </summary>
+        /// <param name="from">起始向量。</param>
+        /// <param name="to">结束向量。</param>
+        /// <param name="dir">观察面的方向。</param>
+        /// <param name="projection">是否将向量投影到观察方向垂直的平面上计算。</param>
+        /// <returns>旋转角度[0-180]。</returns>
+        public static float GetAngle(Vector3 from, Vector3 to, Vector3 dir, bool projection = true)
+        {
+            if (projection)
+            {
+                Vector4 plane = GeometryUtil.GetPlane(dir, Vector3.zero);
+                from = GeometryUtil.GetProjection(from, plane).normalized;
+                to = GeometryUtil.GetProjection(to, plane).normalized;
+            }
+
+            Vector3 cross = Vector3.Cross(to, from);
+            float dot_dir = Vector3.Dot(dir, cross);
+            float dot = Vector3.Dot(from, to);
+            float angle = Mathf.Asin(cross.magnitude) * Mathf.Rad2Deg;         //0 ~ 90
+            if (dot_dir > 0)
+            {
+                if (dot < 0)
+                {
+                    angle = 180 - angle;
+                }
+            }
+            else
+            {
+                if (dot < 0)
+                {
+                    angle = 180 + angle;
+                }
+                else
+                {
+                    angle = 360 - angle;
+                }
+            }
+            return angle;
+        }
+
+        /// <summary>
         /// 通过三点获取一个平面方程。点的顺时针的面表示正面。
         /// </summary>
         /// <param name="a">A点。</param>

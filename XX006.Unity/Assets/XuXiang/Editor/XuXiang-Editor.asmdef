@@ -1,7 +1,9 @@
 {
     "name": "XuXiang-Editor",
     "rootNamespace": "",
-    "references": [],
+    "references": [
+        "GUID:866d2d1ebac16d447abf8e4dd849930f"
+    ],
     "includePlatforms": [],
     "excludePlatforms": [
         "Android",

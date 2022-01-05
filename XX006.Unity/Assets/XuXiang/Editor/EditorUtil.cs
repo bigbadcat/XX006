@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using UnityEditor;
 using UnityEngine;
 using XuXiang;
 
@@ -65,12 +66,6 @@ namespace XuXiang.EditorTools
         /// <param name="text">文本内容。</param>
         public static void SaveTextFile(string path, string text)
         {
-            //FileStream stream = File.Open(path, FileMode.OpenOrCreate);
-            //StreamWriter writer = new StreamWriter(stream);
-            //writer.Write(text);
-            //writer.Dispose();
-            //writer = null;
-
             System.Text.UTF8Encoding utf8 = new System.Text.UTF8Encoding(false);
             File.WriteAllText(path, text, utf8);
         }
@@ -90,6 +85,37 @@ namespace XuXiang.EditorTools
                 string file = files[i].Substring(index).Replace("\\", "/");
                 prefabs.Add(file);
             }
+        }
+
+        /// <summary>
+        /// 以GUID为资产标识保存资产。
+        /// </summary>
+        /// <param name="key">保存的标识。</param>
+        /// <param name="asset">资产对象。</param>
+        public static void SaveAssetToPrefs(string key, UnityEngine.Object asset)
+        {
+            
+            string guid = string.Empty;
+            if (asset != null)
+            {
+                string path = AssetDatabase.GetAssetPath(asset);
+                guid = AssetDatabase.GUIDFromAssetPath(path).ToString();
+            }
+            EditorPrefs.SetString(key, guid);
+        }
+
+        /// <summary>
+        /// 加载prefs保存的资产。
+        /// </summary>
+        /// <typeparam name="T">资产类型。</typeparam>
+        /// <param name="key">保存标识。</param>
+        /// <returns>资产对象。</returns>
+        public static T LoadAssetFromPrefs<T>(string key) where T : UnityEngine.Object
+        {
+            string guid = EditorPrefs.GetString(key, string.Empty);
+            string path = AssetDatabase.GUIDToAssetPath(guid);
+            T t = string.IsNullOrEmpty(path) ? null : AssetDatabase.LoadAssetAtPath<T>(path);
+            return t;
         }
 
         #endregion
