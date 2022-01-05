@@ -6,17 +6,17 @@ using XuXiang;
 namespace XX006
 {
     /// <summary>
-    /// Ñ¹ÍäÇøÓò£¬»á¶Ô³¡¾°ÄÚµÄ²İ²úÉúÓ°Ïì¡£(Ä¿Ç°½öÖ§³ÖÔ²ĞÎ)
+    /// å‹å¼¯åŒºåŸŸï¼Œä¼šå¯¹åœºæ™¯å†…çš„è‰äº§ç”Ÿå½±å“ã€‚(ç›®å‰ä»…æ”¯æŒåœ†å½¢)
     /// </summary>
     public class BendArea : MonoBehaviourCache
     {
         /// <summary>
-        /// ×î´óµÄÑ¹ÍäÇøÓò¡£
+        /// æœ€å¤§çš„å‹å¼¯åŒºåŸŸã€‚
         /// </summary>
         public static int MAX_BEND_AREA = 8;
 
         /// <summary>
-        /// »ñÈ¡µ±Ç°µÄÑ¹ÍäÇøÓò¡£
+        /// è·å–å½“å‰çš„å‹å¼¯åŒºåŸŸã€‚
         /// </summary>
         public static List<BendArea> CurAreas
         {
@@ -24,12 +24,12 @@ namespace XX006
         }
 
         /// <summary>
-        /// µ±Ç°Ñ¹ÍäÇøÓò¡£
+        /// å½“å‰å‹å¼¯åŒºåŸŸã€‚
         /// </summary>
         public static List<BendArea> s_CurAreas = new List<BendArea>();
 
         /// <summary>
-        /// »ñÈ¡»òÉèÖÃÑ¹Íä·¶Î§¡£(0-0.5×î´óÑ¹ÍäÖµ£¬0.5-1µİ¼õ)
+        /// è·å–æˆ–è®¾ç½®å‹å¼¯èŒƒå›´ã€‚(0-0.5æœ€å¤§å‹å¼¯å€¼ï¼Œ0.5-1é€’å‡)
         /// </summary>
         public float Range
         {
@@ -38,7 +38,7 @@ namespace XX006
         }
 
         /// <summary>
-        /// »ñÈ¡Ñ¹ÍäĞÅÏ¢¡£ÓÃÓÚÌá½»µ½ComputeShaderÖĞ¡£
+        /// è·å–å‹å¼¯ä¿¡æ¯ã€‚ç”¨äºæäº¤åˆ°ComputeShaderä¸­ã€‚
         /// </summary>
         public Vector4 Info
         {
@@ -59,7 +59,7 @@ namespace XX006
         }
 
         /// <summary>
-        /// Ñ¹Íä·¶Î§¡£
+        /// å‹å¼¯èŒƒå›´ã€‚
         /// </summary>
         [Range(0, 10)]
         [SerializeField]

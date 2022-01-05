@@ -8,7 +8,7 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scene/AppRoot.unity
     guid: 49b459f15d0229a42bac175b973295b9
-  - enabled: 1
+  - enabled: 0
     path: Assets/ResourcesEx/Scene/BigWorld.unity
     guid: 6d778ea014144184cafb3a35417f2591
   m_configObjects: {}
