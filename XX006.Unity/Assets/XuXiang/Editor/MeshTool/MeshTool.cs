@@ -12,6 +12,123 @@ namespace XuXiang.EditorTools
     public static class MeshTool
     {
         /// <summary>
+        /// 生成草网格。
+        /// </summary>
+        /// <param name="split">水平分的格子数。</param>
+        /// <param name="root">是否带草根。</param>
+        /// <param name="path">网格保存路径。</param>
+        public static void BuildGrassMesh(int split, bool root, string path)
+        {
+            var start = DateTime.Now;            
+            int vcount = 2 + split * 2;
+            Vector3[] vertices = new Vector3[vcount];
+            Vector2[] uv = new Vector2[vcount];
+            Vector3[] normals = new Vector3[vcount];
+            Vector4[] tangents = new Vector4[vcount];
+            int[] triangles = new int[split * 2 * 3];
+            for (int i = 0; i < vcount; ++i)
+            {
+                normals[i] = new Vector3(0, 0, -1);
+                tangents[i] = new Vector4(1, 0, 0, -1);
+            }
+
+            float sh = 1.0f / split;
+            for (int i = 0; i <= split; ++i)
+            {
+                float y = i * sh;
+                Vector3 left = new Vector3(-0.5f, y, 0);
+                Vector3 right = new Vector3(0.5f, y, 0);
+                vertices[i * 2] = left;
+                vertices[i * 2 + 1] = right;
+                uv[i * 2] = new Vector2(0, y);
+                uv[i * 2 + 1] = new Vector2(1, y);
+            }
+            for (int i = 0; i < split; ++i)
+            {
+                int index = i * 2;
+                int t_index = i * 6;
+                triangles[t_index] = index + 0;
+                triangles[t_index + 1] = index + 3;
+                triangles[t_index + 2] = index + 1;
+                triangles[t_index + 3] = index + 3;
+                triangles[t_index + 4] = index + 0;
+                triangles[t_index + 5] = index + 2;
+            }
+
+            Mesh mesh = new Mesh();
+            if (root)
+            {
+                Vector3[] r_vertices = new Vector3[vcount + 4];
+                Vector2[] r_uv = new Vector2[vcount + 4];
+                Vector3[] r_normals = new Vector3[vcount + 4];
+                Vector4[] r_tangents = new Vector4[vcount + 4];
+                int[] r_triangles = new int[triangles.Length + 12];
+
+                for (int i = 0; i < vcount; ++i)
+                {
+                    r_vertices[i + 4] = vertices[i];
+                    r_uv[i + 4] = uv[i];
+                    r_normals[i + 4] = normals[i];
+                    r_tangents[i + 4] = tangents[i];
+                }
+                r_vertices[0] = vertices[0] + new Vector3(0, 0, 0.01f);
+                r_vertices[1] = vertices[1] + new Vector3(0, 0, 0.01f);
+                r_vertices[2] = vertices[0] + new Vector3(0, 0, -0.01f);
+                r_vertices[3] = vertices[1] + new Vector3(0, 0, -0.01f);
+                r_vertices[4] = vertices[0] + new Vector3(0, 0.02f, 0);
+                r_vertices[5] = vertices[1] + new Vector3(0, 0.02f, 0);
+
+                r_uv[0] = uv[0];
+                r_uv[1] = uv[1];
+                r_uv[2] = uv[0];
+                r_uv[3] = uv[1];
+                r_uv[4] = uv[0] + new Vector2(0, 0.01f);
+                r_uv[5] = uv[1] + new Vector2(0, 0.01f);
+
+                for (int i = 0; i < 4; ++i)
+                {
+                    r_normals[i] = new Vector3(0, 0, -1);
+                    r_tangents[i] = new Vector4(1, 0, 0, -1);
+                }
+
+                for (int i = 0; i < triangles.Length; ++i)
+                {
+                    r_triangles[i + 12] = triangles[i] + 4;
+                }
+
+                r_triangles[0] = 0;
+                r_triangles[1] = 5;
+                r_triangles[2] = 1;
+                r_triangles[3] = 5;
+                r_triangles[4] = 0;
+                r_triangles[5] = 4;
+                r_triangles[6] = 2;
+                r_triangles[7] = 5;
+                r_triangles[8] = 3;
+                r_triangles[9] = 5;
+                r_triangles[10] = 2;
+                r_triangles[11] = 4;
+
+                mesh.vertices = r_vertices;
+                mesh.uv = r_uv;
+                mesh.normals = r_normals;
+                mesh.tangents = r_tangents;
+                mesh.triangles = r_triangles;
+            }
+            else
+            {
+                mesh.vertices = vertices;
+                mesh.uv = uv;
+                mesh.normals = normals;
+                mesh.tangents = tangents;
+                mesh.triangles = triangles;
+            }
+
+            SaveMeshToAsset(mesh, path);
+            Log.Info("Build terrain mesh finished in {0} sec. ", (DateTime.Now - start).TotalSeconds);
+        }
+
+        /// <summary>
         /// 通过地形创建网格信息。
         /// </summary>
         /// <param name="tdata">地形数据。</param>
@@ -19,11 +136,9 @@ namespace XuXiang.EditorTools
         /// <param name="grid_y">竖直格子数。</param>
         /// <param name="path">要保存的路径。</param>
         /// <returns>地形网格信息。</returns>
-        public static void CreateTerrainMesh(TerrainData tdata, int grid_x, int grid_y, string path)
+        public static void BuildTerrainMesh(TerrainData tdata, int grid_x, int grid_y, string path)
         {
             var start = DateTime.Now;
-            
-
             int row = grid_y + 1;
             int col = grid_x + 1;
             Vector3[] vertices = new Vector3[row * col];
@@ -109,8 +224,8 @@ namespace XuXiang.EditorTools
             mesh.normals = normals;
             mesh.uv = uvs;
             mesh.triangles = triangles;
-            SaveMeshToAsset(mesh, path + ".asset");
-            Log.Info("Build terrain mesh finished in {0} sec. ", (DateTime.Now - start).TotalSeconds);            
+            SaveMeshToAsset(mesh, path);
+            Log.Info("Build terrain mesh finished in {0} sec. ", (DateTime.Now - start).TotalSeconds);
         }
 
         /// <summary>
@@ -123,7 +238,7 @@ namespace XuXiang.EditorTools
             var start = DateTime.Now;
             MeshInfo minfo = MeshInfo.Create(mesh);
             minfo.RemoveTriangle(target, angle);
-            SaveMeshToAsset(minfo.GenerateMesh(), path + ".asset");
+            SaveMeshToAsset(minfo.GenerateMesh(), path);
             Log.Info("Optimize terrain mesh finished in {0} sec. ", (DateTime.Now - start).TotalSeconds);
         }
 
@@ -131,13 +246,14 @@ namespace XuXiang.EditorTools
         /// 保存网格到资产。
         /// </summary>
         /// <param name="mesh">网格对象。(不能是asset自身)</param>
-        /// <param name="path">资产路径。</param>
+        /// <param name="path">资产路径。(不带asset后缀)</param>
         private static void SaveMeshToAsset(Mesh mesh, string path)
         {
-            Mesh to_mesh = AssetDatabase.LoadAssetAtPath<Mesh>(path);
+            string asset_path = path + ".asset";
+            Mesh to_mesh = AssetDatabase.LoadAssetAtPath<Mesh>(asset_path);
             if (to_mesh == null)
             {
-                AssetDatabase.CreateAsset(mesh, path);
+                AssetDatabase.CreateAsset(mesh, asset_path);
             }
             else
             {

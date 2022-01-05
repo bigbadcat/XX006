@@ -9,8 +9,8 @@ Shader "Unlit/GrassHeight"
         _Move("Move", Vector) = (0, 0, 0, 0)                    //偏移值
         _MoveRate("MoveRate", Range(0, 1)) = 0                  //偏移系数
 
-        _Bend("Move", Vector) = (0, 0, 0, 0)                    //压弯值
-        _BendRate("MoveRate", Range(0, 1)) = 0                  //压弯系数
+        _Bend("Bend", Vector) = (0, 0, 0, 0)                    //压弯值
+        _BendRate("BendRate", Range(0, 1)) = 0                  //压弯系数
     }
 
     SubShader
